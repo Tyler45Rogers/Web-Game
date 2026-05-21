@@ -49,18 +49,32 @@ class MainScene extends Phaser.Scene {
   newPlanet(planet, scale) {
     return this.matter.add.sprite(512, 0, 'planets', planet).setCircle(64).setScale(scale, scale);
   }
+
+  //Get random num 0-11
+  random12(){
+      return Math.floor(Math.random() * (11 - 0 + 1)) + 0;
+  }
   
   create() {
+    //Timer, planets will be added periodically00
+    const planetTimer = this.time.addEvent(
+      {
+        delay: 1000,
+        loop: true,
+        callback: () => {
+          let planet = this.random12();
+          this.newPlanet(planet, planets_scale[planet]);}
+      }
+    );
+
     //Bounds of the world (whole element)
     this.matter.world.setBounds(0, 0, width, height, 10, true, true, true);
     //Gravity
     this.matter.world.setGravity(0, 1, 0.0001);
 
-    for (let i = 0; i < 12; i++){
+    /* for (let i = 0; i < 12; i++){
       this.newPlanet(i, planets_scale[i]);
-    }
-
-
+    } */
 
     //Ground and walls
     //Graphics object
