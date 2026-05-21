@@ -3,6 +3,37 @@ import Phaser from 'phaser';
 const width = 1000;
 const height = 1000;
 
+//Planets setup
+const planets = {
+  0: "pluto",
+  1: "moon",
+  2: "mercury",
+  3: "mars",
+  4: "venus",
+  5: "earth",
+  6: "neptune",
+  7: "uranus",
+  8: "saturn",
+  9: "jupiter",
+  10: "sun",
+  11: "black_hole"
+};
+
+const planets_scale = {
+  0: 0.45,  // pluto
+  1: 0.54,  // moon
+  2: 0.648, // mercury
+  3: 0.792, // mars
+  4: 0.972, // venus
+  5: 1.215, // earth
+  6: 1.53,  // neptune
+  7: 1.845, // uranus
+  8: 2.25,  // saturn
+  9: 2.7,   // jupiter
+  10: 3.15, // sun
+  11: 3.6   // black_hole
+};
+
 class MainScene extends Phaser.Scene {
   constructor() {
     super('main');
@@ -14,36 +45,21 @@ class MainScene extends Phaser.Scene {
     
   }
 
+  //function to create a planet
+  newPlanet(planet, scale) {
+    return this.matter.add.sprite(512, 0, 'planets', planet).setCircle(64).setScale(scale, scale);
+  }
+  
   create() {
-
     //Bounds of the world (whole element)
     this.matter.world.setBounds(0, 0, width, height, 10, true, true, true);
     //Gravity
     this.matter.world.setGravity(0, 1, 0.0001);
 
-    this.planet0 = this.matter.add.sprite(0, 0, 'planets', 0);
-    this.planet0.setCircle(64);
-    this.planet1 = this.matter.add.sprite(128, 0, 'planets', 1);
-    this.planet1.setCircle(64);
-    this.planet2 = this.matter.add.sprite(256, 0, 'planets', 2);
-    this.planet2.setCircle(64);
-    this.planet3 = this.matter.add.sprite(384, 0, 'planets', 3);
-    this.planet3.setCircle(64);
-    this.planet4 = this.matter.add.sprite(512, 0, 'planets', 4);
-    this.planet4.setCircle(64);
-    this.planet5 = this.matter.add.sprite(640, 0, 'planets', 5);
-    this.planet5.setCircle(64);
-    this.planet6 = this.matter.add.sprite(768, 0, 'planets', 6);
-    this.planet6.setCircle(64);
+    for (let i = 0; i < 12; i++){
+      this.newPlanet(i, planets_scale[i]);
+    }
 
-    this.planet7 = this.matter.add.sprite(0, 128, 'planets', 7);
-    this.planet7.setCircle(64);
-    this.planet8 = this.matter.add.sprite(128, 128, 'planets', 8);
-    this.planet8.setCircle(64);
-    this.planet9 = this.matter.add.sprite(256, 128, 'planets', 9);
-    this.planet9.setCircle(64);
-    this.planet10 = this.matter.add.sprite(384, 128, 'planets', 10);
-    this.planet10.setCircle(64);
 
 
     //Ground and walls
@@ -53,9 +69,7 @@ class MainScene extends Phaser.Scene {
     //Bottom rectangle (will be bottom for game)
     this.bottomRect = this.add.rectangle(500, this.scale.height - 32, this.scale.width, 64, 0x808080);
     this.matter.add.gameObject(this.bottomRect, {static: true});
-
-    
-    
+  
 
   }
 }
