@@ -6,7 +6,6 @@ export default class PlanetTestScene extends Phaser.Scene {
   }
 
   preload() {
-    // Load the 128x128 spritesheet
     this.load.spritesheet('planets', '/planetsprite.png', {
       frameWidth: 128,
       frameHeight: 128
@@ -17,75 +16,147 @@ export default class PlanetTestScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
 
-    // 1. Create the container (Bucket)
-    // We use a static group for the walls and floor so they don't move when hit
-    const walls = this.physics.add.staticGroup();
+    // 1. Create the container (Bucket) using Matter Rectangles
+    // isStatic: true ensures these objects are immovable walls
+    const wallOptions = { isStatic: true, friction: 0.1 };
+    
+    // x, y (center points), width, height
+    this.matter.add.rectangle(width / 2, height - 25, 600, 50, wallOptions); // Floor
+    this.matter.add.rectangle(width / 2 - 325, height - 350, 50, 600, wallOptions); // Left Wall
+    this.matter.add.rectangle(width / 2 + 325, height - 350, 50, 600, wallOptions); // Right Wall
 
-    // Invisible physics boundaries (x, y)
-    const floor = walls.create(width / 2, height - 50, null).setSize(600, 100).setVisible(false);
-    const leftWall = walls.create(width / 2 - 300, height - 350, null).setSize(50, 600).setVisible(false);
-    const rightWall = walls.create(width / 2 + 300, height - 350, null).setSize(50, 600).setVisible(false);
-
-    // Draw visible lines so we can see the bucket
+    // Visible boundary lines
     const graphics = this.add.graphics();
     graphics.lineStyle(4, 0xffffff, 1);
-    graphics.strokeRect(width / 2 - 275, height - 650, 550, 600);
+    graphics.strokeRect(width / 2 - 300, height - 650, 600, 600);
 
-    // 2. Define the adjusted radii for the 128x128 boundaries
+    const maxsize = 160; // Max planet radius
+
+    // The "Single Source of Truth" for game balancing
     const celestialData = [
-      { id: 0, radius: 16 },  // Pluto
-      { id: 1, radius: 20 },  // Moon
-      { id: 2, radius: 24 },  // Mercury
-      { id: 3, radius: 28 },  // Mars
-      { id: 4, radius: 32 },  // Venus
-      { id: 5, radius: 36 },  // Earth
-      { id: 6, radius: 40 },  // Neptune
-      { id: 7, radius: 44 },  // Uranus
-      { id: 8, radius: 48 },  // Saturn
-      { id: 9, radius: 54 },  // Jupiter
-      { id: 10, radius: 60 }, // Sun
-      { id: 11, radius: 64 }  // Black Hole
+      // Standard Planets
+      { id: 0, visualScale: 0.25, bodyRadius: 62, originY: 0.5 }, //pluto
+      { id: 1, visualScale: 0.35, bodyRadius: 62, originY: 0.5 }, //moon
+      { id: 2, visualScale: 0.45, bodyRadius: 62, originY: 0.5 }, //mercury
+      { id: 3, visualScale: 0.55, bodyRadius: 62, originY: 0.5 }, //mars
+      { id: 4, visualScale: 0.65, bodyRadius: 62, originY: 0.5 }, //venus
+      { id: 5, visualScale: 0.70, bodyRadius: 62, originY: 0.5 }, //earth
+      { id: 6, visualScale: 0.90, bodyRadius: 62, originY: 0.5 }, //neptune
+      { id: 7, visualScale: 1.00, bodyRadius: 62  , originY: 0.5 }, //uranus
+      
+      // Saturn (Compound Body)
+      { 
+        id: 8, 
+        visualScale: 2, 
+        originY: 0.5, 
+        isCompound: true, 
+        coreRadius: 38,      // The center circle
+        ringWidth: 120,      // Wide enough to stick out past the 128 core
+        ringHeight: 30, 
+        ringAngle: 0 
+      },
+      
+      { id: 9, visualScale: 1.45, bodyRadius: 60, originY: 0.5 }, //jupiter
+
+      {
+        id: 10, 
+        visualScale: 2.10, 
+        originY: 0.5, 
+        isBumpy: true,
+        coreRadius: 46,
+        bumpCount: 4,
+        bumpWidth: 110,
+        bumpHeight: 20
+      }, //sun
+      
+      // Black Hole (Compound Body)
+      { 
+        id: 11, 
+        visualScale: 3, 
+        originY: 0.5, 
+        isCompound: true, 
+        coreRadius: 40, 
+        ringWidth: 120, 
+        ringHeight: 25, 
+        ringAngle: 0 
+      }
     ];
 
-    // 3. Create a physics group for the dropping planets
-    this.planetsGroup = this.physics.add.group();
-
-    // Enable collisions
-    this.physics.add.collider(this.planetsGroup, walls);
-    this.physics.add.collider(this.planetsGroup, this.planetsGroup);
-
-    // 4. Trigger the drop sequence
     this.dropPlanets(celestialData);
   }
 
   dropPlanets(data) {
     const width = this.scale.width;
+    const { Body, Bodies } = Phaser.Physics.Matter.Matter;
 
     data.forEach((planetInfo, index) => {
-      // Delay each drop by 600ms so they cascade nicely instead of overlapping
-      this.time.delayedCall(index * 5000, () => {
+      this.time.delayedCall(index * 600, () => {
+        const dropX = Phaser.Math.Between(width / 2 - 150, width / 2 + 150);
+        const dropY = 50;
         
-        // Randomize the drop X coordinate slightly to ensure they bounce around
-        const dropX = Phaser.Math.Between(width / 2 - 15, width / 2 + 15);
-        
-        // Spawn the planet at the top of the screen
-        let planet = this.planetsGroup.create(dropX, 50, 'planets', planetInfo.id);
-        
-        // Apply circular physics
-        planet.body.setCircle(planetInfo.radius);
-        
-        // Perfectly center the collision circle inside the 128x128 frame
-        const offset = (128 - (planetInfo.radius * 2)) / 2;
-        planet.body.setOffset(offset, offset);
+        let planet = this.matter.add.sprite(dropX, dropY, 'planets', planetInfo.id);
 
-        // Apply drop-game physics properties
-        planet.setBounce(0.5); // Slight bounciness
-        planet.setAngularDrag(150); // Slows down rotation over time
-        planet.setDrag(150);         // Slows down horizontal sliding
-        planet.setCollideWorldBounds(true);
+        // 1. Apply visual scale first
+        planet.setScale(planetInfo.visualScale);
+
+        // 2. Build the perfectly sized physics bodies
+        if (planetInfo.isCompound) {
+          // ... Existing Saturn / Black Hole Ring Logic ...
+          const scaledCore = planetInfo.coreRadius * planetInfo.visualScale;
+          const scaledWidth = planetInfo.ringWidth * planetInfo.visualScale;
+          const scaledHeight = planetInfo.ringHeight * planetInfo.visualScale;
+          
+          const core = Bodies.circle(dropX, dropY, scaledCore); 
+          const ring = Bodies.rectangle(dropX, dropY, scaledWidth, scaledHeight, {
+            angle: Phaser.Math.DegToRad(planetInfo.ringAngle),
+            chamfer: { radius: scaledHeight / 2 } 
+          });
+          
+          const compoundBody = Body.create({ parts: [core, ring] });
+          planet.setExistingBody(compoundBody);
+
+        } else if (planetInfo.isBumpy) {
+          
+          // --- NEW BUMPY LOGIC FOR THE SUN ---
+          const scaledCore = planetInfo.coreRadius * planetInfo.visualScale;
+          const scaledWidth = planetInfo.bumpWidth * planetInfo.visualScale;
+          const scaledHeight = planetInfo.bumpHeight * planetInfo.visualScale;
+
+          // Start the parts array with just the center core
+          const parts = [Bodies.circle(dropX, dropY, scaledCore)];
+
+          // Math.PI represents a half-circle (180 degrees). 
+          // Dividing this by our bump count gives us the exact rotation spacing.
+          const angleStep = Math.PI / planetInfo.bumpCount;
+
+          for (let i = 0; i < planetInfo.bumpCount; i++) {
+            const bump = Bodies.rectangle(dropX, dropY, scaledWidth, scaledHeight, {
+              angle: i * angleStep,
+              chamfer: { radius: scaledHeight / 2 } // Keep the bumps smooth!
+            });
+            parts.push(bump); // Add each rectangle to the parts array
+          }
+
+          // Fuse the core and all rectangles together
+          const bumpyBody = Body.create({ parts: parts });
+          planet.setExistingBody(bumpyBody);
+
+        } else {
+          // ... Existing Standard Planet Logic ...
+          const scaledRadius = planetInfo.bodyRadius * planetInfo.visualScale;
+          const circleBody = Bodies.circle(dropX, dropY, scaledRadius);
+          planet.setExistingBody(circleBody);
+        }
         
-        // Add a slight spin as they drop
-        planet.setAngularVelocity(Phaser.Math.Between(-50, 50));
+        // 3. APPLY ORIGIN AFTER THE BODY IS SET
+        const originY = planetInfo.originY || 0.5;
+        planet.setOrigin(0.5, originY); 
+        
+        // 4. Suika Physics Properties
+        planet.setBounce(0.1); 
+        planet.setFriction(0.005); 
+        planet.setFrictionAir(0.01); 
+        
       });
     });
   }

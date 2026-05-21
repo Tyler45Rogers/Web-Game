@@ -15,9 +15,9 @@
       height: 800,
       parent: gameContainer,
       physics: {
-        default: 'arcade',
-        arcade: {
-          gravity: { y: 600 },
+        default: 'matter',
+        matter: {
+          gravity: { y: 0.6 },
           debug: true // Great for tweaking your planet hitboxes!
         }
       },
