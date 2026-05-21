@@ -34,6 +34,8 @@ const planets_scale = {
   11: 3.6   // black_hole
 };
 
+let largestPlanet = 1;
+
 class MainScene extends Phaser.Scene {
   constructor() {
     super('main');
@@ -46,35 +48,92 @@ class MainScene extends Phaser.Scene {
   }
 
   //function to create a planet
-  newPlanet(planet, scale) {
-    return this.matter.add.sprite(512, 0, 'planets', planet).setCircle(64).setScale(scale, scale);
+  newPlanet(planet, scale, x = 512, y = 0) {
+    const sprite = this.matter.add
+      .sprite(x, y, 'planets', planet)
+      .setCircle(64)
+      .setScale(scale, scale);
+
+    sprite.isPlanet = true;
+
+    //Set largest planet
+    if(largestPlanet < planet){
+      largestPlanet = planet;
+    }
+
+    return sprite;
+    
   }
 
   //Get random num 0-11
-  random12(){
-      return Math.floor(Math.random() * (11 - 0 + 1)) + 0;
+  random12(max){
+      return Math.floor(Math.random() * (max - 0 + 1)) + 0;
+  }
+
+  //Uses the knowledge of what the largest planets are to get next planets
+  nextPlanet(){
+      return this.random12(largestPlanet);
+  }
+  
+  //Takes two planet sprites, if they are the same a bigger one replaces them
+  collidePlanets(planetA, planetB){  
+        if (planetA.frame.name !== planetB.frame.name) return;
+
+        let xA = planetA.x;
+        let yA = planetA.y;
+        let xB = planetB.x;
+        let yB = planetB.y;
+
+        let x = (xA + xB) / 2;
+        let y = (yA + yB) / 2;
+
+        //Get sprite of new planet
+        let newPlanet =  parseInt(planetA.frame.name) + 1;
+        //Remove old planets
+        planetA.destroy();
+        planetB.destroy();
+        
+        this.newPlanet(newPlanet, planets_scale[newPlanet], x, y);
   }
   
   create() {
-    //Timer, planets will be added periodically00
+    //Timer, planets will be added periodically
     const planetTimer = this.time.addEvent(
       {
-        delay: 1000,
+        delay: 2500,
         loop: true,
         callback: () => {
-          let planet = this.random12();
-          this.newPlanet(planet, planets_scale[planet]);}
+          let planet = this.nextPlanet();
+          this.newPlanet(planet, planets_scale[planet]);
+        }
       }
     );
+
+    //Check if two of the same planets collide, if so combine them into the next biggest planet
+    this.matter.world.on("collisionstart", (event, bodyA, bodyB) => {
+      //If same planet, remove them and add new planet in their location
+      event.pairs.forEach(pair => {
+
+        const planetA = pair.bodyA.gameObject;
+        const planetB = pair.bodyB.gameObject;
+
+        //Make sure they exist
+        if (!planetA || !planetB) return;
+
+        //Check they are planets
+        if (!planetA.isPlanet || !planetB.isPlanet) return;
+
+        //Call collide function
+        this.collidePlanets(planetA, planetB);
+
+      })
+
+    })
 
     //Bounds of the world (whole element)
     this.matter.world.setBounds(0, 0, width, height, 10, true, true, true);
     //Gravity
-    this.matter.world.setGravity(0, 1, 0.0001);
-
-    /* for (let i = 0; i < 12; i++){
-      this.newPlanet(i, planets_scale[i]);
-    } */
+    this.matter.world.setGravity(0, 1, 0.001);
 
     //Ground and walls
     //Graphics object
@@ -84,7 +143,6 @@ class MainScene extends Phaser.Scene {
     this.bottomRect = this.add.rectangle(500, this.scale.height - 32, this.scale.width, 64, 0x808080);
     this.matter.add.gameObject(this.bottomRect, {static: true});
   
-
   }
 }
 
