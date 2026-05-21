@@ -19,14 +19,14 @@
 
 </script>
 
-<section class="flex flex-col justify-items-center mx-auto w-full h-full">
+<section class="flex flex-col justify-items-center w-full h-full">
 
     <div class="flex flex-row justify-items-center mx-auto">
-        <p class="text-5xl font-bold mt-20 mb-20"> Games </p>
+        <p class="text-5xl font-bold mt-20"> Games </p>
     </div>
 
 
-    <div class="flex flex-col justify-items-center mx-auto mb-20">
+    <div class="flex flex-col justify-items-center mx-auto mt-10 mb-20">
         <p class="text-3xl font-bold mb-10">Planets</p>
 
         <div bind:this={gameContainer}></div>
