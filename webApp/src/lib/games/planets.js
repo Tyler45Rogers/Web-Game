@@ -72,7 +72,7 @@ class MainScene extends Phaser.Scene {
 
   //Uses the knowledge of what the largest planets are to get next planets
   nextPlanet(){
-      return this.random12(largestPlanet);
+      return this.random12(largestPlanet - 1);
   }
   
   //Takes two planet sprites, if they are the same a bigger one replaces them
@@ -97,17 +97,13 @@ class MainScene extends Phaser.Scene {
   }
   
   create() {
-    //Timer, planets will be added periodically
-    const planetTimer = this.time.addEvent(
-      {
-        delay: 2500,
-        loop: true,
-        callback: () => {
-          let planet = this.nextPlanet();
-          this.newPlanet(planet, planets_scale[planet]);
-        }
-      }
-    );
+    //spawn planet at mouse x coordinate
+    this.input.on('pointerdown', function (pointer) {
+        // Spawns the planet using the mouse's X coordinate and a fixed Y coordinate
+        let planet = this.nextPlanet();
+        this.newPlanet(planet, planets_scale[planet], pointer.x)
+    }, this);
+
 
     //Check if two of the same planets collide, if so combine them into the next biggest planet
     this.matter.world.on("collisionstart", (event, bodyA, bodyB) => {
@@ -140,8 +136,16 @@ class MainScene extends Phaser.Scene {
     let graphics = this.add.graphics();
     graphics.fillStyle(0x808080);
     //Bottom rectangle (will be bottom for game)
-    this.bottomRect = this.add.rectangle(500, this.scale.height - 32, this.scale.width, 64, 0x808080);
+    this.bottomRect = this.add.rectangle(500, this.scale.height - 16, this.scale.width, 32, 0x808080);
+    this.leftRect = this.add.rectangle(16, 484, 32, 968, 0x808080);
+    this.rightRect = this.add.rectangle(this.scale.width - 16, 484, 32, 968, 0x808080);
+    this.matter.add.gameObject(this.leftRect, {static: true});
+    this.matter.add.gameObject(this.rightRect, {static: true});
     this.matter.add.gameObject(this.bottomRect, {static: true});
+
+    this.leftRect.setStatic(true);
+    this.rightRect.setStatic(true);
+    this.bottomRect.setStatic(true);
   
   }
 }
