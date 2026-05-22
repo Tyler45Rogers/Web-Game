@@ -20,18 +20,18 @@ const planets = {
 };
 
 const planets_scale = {
-  0: 0.45,  // pluto
-  1: 0.54,  // moon
-  2: 0.648, // mercury
-  3: 0.792, // mars
-  4: 0.972, // venus
-  5: 1.215, // earth
-  6: 1.53,  // neptune
-  7: 1.845, // uranus
-  8: 2.25,  // saturn
-  9: 2.7,   // jupiter
-  10: 3.15, // sun
-  11: 3.6   // black_hole
+  0: 0.36,   // pluto
+  1: 0.432,  // moon
+  2: 0.5184, // mercury
+  3: 0.6336, // mars
+  4: 0.7776, // venus
+  5: 0.972,  // earth
+  6: 1.224,  // neptune
+  7: 1.476,  // uranus
+  8: 1.8,    // saturn
+  9: 2.16,   // jupiter
+  10: 2.52,  // sun
+  11: 2.88   // black_hole
 };
 
 let largestPlanet = 1;
@@ -39,6 +39,9 @@ let largestPlanet = 1;
 let planetQueue = [];
 //Text for next planet
 let nextText = "Next Planet:\n";
+
+//Clamp x coordiinates for the planets to 144 and 744
+const clamp = (val) => Math.min(Math.max(val, 160), 840);
 
 class MainScene extends Phaser.Scene {
   constructor() {
@@ -69,7 +72,8 @@ class MainScene extends Phaser.Scene {
     return sprite; 
   }
 
-  newPlanet(x = 512, y = 0) {
+  newPlanet(x = 512, y = 112) {
+    x = clamp(x);
     const sprite = this.matter.add
       .sprite(x, y, 'planets', planetQueue[0])
       .setCircle(64)
@@ -132,9 +136,9 @@ class MainScene extends Phaser.Scene {
     planetQueue[0] = this.nextPlanet();
     planetQueue[1] = this.nextPlanet();
     //print next planet
-    this.nextPlanetText = this.add.text(50, 10, nextText, { fontSize: '24px', fill: '#fff' });
+    this.nextPlanetText = this.add.text(10, 10, nextText, { fontSize: '24px', fill: '#fff' });
     //Sprite for next planet
-    this.nextSprite = this.add.sprite((this.nextPlanetText.width / 2) + 50, this.nextPlanetText.height + 20 + 32, 'planets', planetQueue[1]).setScale(0.5);
+    this.nextSprite = this.add.sprite((this.nextPlanetText.width / 2) + 10, this.nextPlanetText.height + 32, 'planets', planetQueue[1]).setScale(0.5);
     //spawn planet at mouse x coordinate
     this.input.on('pointerup', function (pointer) {
         // Spawns the planet using the mouse's X coordinate and a fixed Y coordinate
@@ -173,9 +177,11 @@ class MainScene extends Phaser.Scene {
     let graphics = this.add.graphics();
     graphics.fillStyle(0x808080);
     //Bottom rectangle (will be bottom for game)
-    this.bottomRect = this.add.rectangle(500, this.scale.height - 16, this.scale.width, 32, 0x808080);
-    this.leftRect = this.add.rectangle(16, 484, 32, 968, 0x808080);
-    this.rightRect = this.add.rectangle(this.scale.width - 16, 484, 32, 968, 0x808080);
+    this.bottomRect = this.add.rectangle(500, this.scale.height - 128, this.scale.width - 256, 32, 0x808080);
+
+
+    this.leftRect = this.add.rectangle(128 + 16, 484, 32, this.scale.height - 256, 0x808080);
+    this.rightRect = this.add.rectangle(this.scale.width - 128 - 16, 484, 32, this.scale.height - 256, 0x808080);
     this.matter.add.gameObject(this.leftRect, {static: true});
     this.matter.add.gameObject(this.rightRect, {static: true});
     this.matter.add.gameObject(this.bottomRect, {static: true});
@@ -196,7 +202,7 @@ export function createGame(parent) {
     physics: {
       default: 'matter',
       matter: {
-        debug: false
+        debug: true
       }
     },
     scene: [MainScene]
