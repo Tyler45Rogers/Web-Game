@@ -14,11 +14,13 @@
       width: 800,
       height: 800,
       parent: gameContainer,
+      backgroundColor: '#050510', // Deep space blue/black
+      pixelArt: true,             // Keeps pixel art perfectly crisp!
       physics: {
         default: 'matter',
         matter: {
           gravity: { y: 0.6 },
-          debug: true // Great for tweaking your planet hitboxes!
+          debug: false // Great for tweaking your planet hitboxes!
         }
       },
       scene: [PlanetTestScene]
