@@ -82,8 +82,6 @@ class MainScene extends Phaser.Scene {
       largestPlanet = planetQueue[0];
     }
 
-    //Update nextText
-    this.nextPlanetText.setText(nextText + planets[planetQueue[1]]);
     //Update nextSprite
     this.nextSprite.setTexture('planets', planetQueue[1]);
 
@@ -134,7 +132,7 @@ class MainScene extends Phaser.Scene {
     planetQueue[0] = this.nextPlanet();
     planetQueue[1] = this.nextPlanet();
     //print next planet
-    this.nextPlanetText = this.add.text(50, 10, nextText + planets[planetQueue[1]], { fontSize: '24px', fill: '#fff' });
+    this.nextPlanetText = this.add.text(50, 10, nextText, { fontSize: '24px', fill: '#fff' });
     //Sprite for next planet
     this.nextSprite = this.add.sprite((this.nextPlanetText.width / 2) + 50, this.nextPlanetText.height + 20 + 32, 'planets', planetQueue[1]).setScale(0.5);
     //spawn planet at mouse x coordinate
@@ -168,7 +166,7 @@ class MainScene extends Phaser.Scene {
     //Bounds of the world (whole element)
     this.matter.world.setBounds(0, 0, width, height, 10, true, true, true);
     //Gravity
-    this.matter.world.setGravity(0, 1, 0.001);
+    this.matter.world.setGravity(0, 1, 0.0025);
 
     //Ground and walls
     //Graphics object
@@ -198,7 +196,7 @@ export function createGame(parent) {
     physics: {
       default: 'matter',
       matter: {
-        debug: true
+        debug: false
       }
     },
     scene: [MainScene]
