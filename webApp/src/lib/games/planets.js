@@ -35,6 +35,10 @@ const planets_scale = {
 };
 
 let largestPlanet = 1;
+//Array containing the current planet to be made and the next planet
+let planetQueue = [];
+//Text for next planet
+let nextText = "Next Planet:\n";
 
 class MainScene extends Phaser.Scene {
   constructor() {
@@ -42,13 +46,15 @@ class MainScene extends Phaser.Scene {
   }
 
   preload() {
+    //Background
+    this.load.image('background', '/assets/space.jpg');
     this.load.image('border', '/assets/border.png');
     this.load.spritesheet('planets', '/assets/planetsprite.png', { frameWidth: 128, frameHeight: 128 });
     
   }
 
-  //function to create a planet
-  newPlanet(planet, scale, x = 512, y = 0) {
+  //function to create a planet after collision
+  makePlanet(planet, scale, x = 512, y = 0) {
     const sprite = this.matter.add
       .sprite(x, y, 'planets', planet)
       .setCircle(64)
@@ -60,9 +66,34 @@ class MainScene extends Phaser.Scene {
     if(largestPlanet < planet){
       largestPlanet = planet;
     }
+    return sprite; 
+  }
 
-    return sprite;
-    
+  newPlanet(x = 512, y = 0) {
+    const sprite = this.matter.add
+      .sprite(x, y, 'planets', planetQueue[0])
+      .setCircle(64)
+      .setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
+
+    sprite.isPlanet = true;
+
+    //Set largest planet
+    if(largestPlanet < planetQueue[0]){
+      largestPlanet = planetQueue[0];
+    }
+
+    //Update nextText
+    this.nextPlanetText.setText(nextText + planets[planetQueue[1]]);
+    //Update nextSprite
+    this.nextSprite.setTexture('planets', planetQueue[1]);
+
+    //Update planet queue
+    planetQueue[0] = planetQueue[1];
+    planetQueue[1] = this.nextPlanet();
+
+  
+
+    return sprite; 
   }
 
   //Get random num 0-11
@@ -93,15 +124,23 @@ class MainScene extends Phaser.Scene {
         planetA.destroy();
         planetB.destroy();
         
-        this.newPlanet(newPlanet, planets_scale[newPlanet], x, y);
+        this.makePlanet(newPlanet, planets_scale[newPlanet], x, y);
   }
   
   create() {
+    //Background
+    this.add.image(500, 500, 'background');
+    //Initialize queue
+    planetQueue[0] = this.nextPlanet();
+    planetQueue[1] = this.nextPlanet();
+    //print next planet
+    this.nextPlanetText = this.add.text(50, 10, nextText + planets[planetQueue[1]], { fontSize: '24px', fill: '#fff' });
+    //Sprite for next planet
+    this.nextSprite = this.add.sprite((this.nextPlanetText.width / 2) + 50, this.nextPlanetText.height + 20 + 32, 'planets', planetQueue[1]).setScale(0.5);
     //spawn planet at mouse x coordinate
-    this.input.on('pointerdown', function (pointer) {
+    this.input.on('pointerup', function (pointer) {
         // Spawns the planet using the mouse's X coordinate and a fixed Y coordinate
-        let planet = this.nextPlanet();
-        this.newPlanet(planet, planets_scale[planet], pointer.x)
+        this.newPlanet(pointer.x)
     }, this);
 
 
