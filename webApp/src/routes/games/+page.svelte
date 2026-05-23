@@ -11,7 +11,7 @@
     // 2. Initialize the game exactly as before
     const config = {
       type: Phaser.AUTO,
-      width: 800,
+      width: 1000,
       height: 800,
       parent: gameContainer,
       backgroundColor: '#050510', // Deep space blue/black

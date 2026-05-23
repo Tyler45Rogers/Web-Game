@@ -37,7 +37,22 @@ export default class PlanetTestScene extends Phaser.Scene {
     const width = this.scale.width;
     const height = this.scale.height;
 
-    // --- 0. BACKGROUND GRADIENT & STARFIELD ---
+    // --- CENTRALIZED BUCKET CONFIGURATION ---
+    this.bucket = {
+      innerWidth: 500,  // The exact playable width inside the walls
+      innerHeight: 600, // The exact playable height 
+      bottomOffset: 50, // Distance from the bottom of the screen to the floor
+      wallThickness: 50 // How thick the invisible physics walls are
+    };
+
+    // Calculate absolute coordinates based on the config
+    this.bucket.centerX = width / 2;
+    this.bucket.floorY = height - this.bucket.bottomOffset;
+    this.bucket.leftX = this.bucket.centerX - (this.bucket.innerWidth / 2);
+    this.bucket.rightX = this.bucket.centerX + (this.bucket.innerWidth / 2);
+    this.bucket.topY = this.bucket.floorY - this.bucket.innerHeight;
+
+    // --- BACKGROUND GRADIENT & STARFIELD ---
     const bgGraphics = this.add.graphics();
     const topColor = 0x050510; 
     const bottomColor = 0x3b115e; 
@@ -65,22 +80,44 @@ export default class PlanetTestScene extends Phaser.Scene {
 
     // --- 1. ENVIRONMENT ---
     const wallOptions = { isStatic: true, friction: 0.1 };
+    const wt = this.bucket.wallThickness;
     
-    this.matter.add.rectangle(width / 2, height - 25, 450, 50, wallOptions); 
-    this.matter.add.rectangle(width / 2 - 250, height - 350, 50, 600, wallOptions); 
-    this.matter.add.rectangle(width / 2 + 250, height - 350, 50, 600, wallOptions); 
+    // Floor
+    this.matter.add.rectangle(
+      this.bucket.centerX, 
+      this.bucket.floorY + (wt / 2), 
+      this.bucket.innerWidth + (wt * 2), // Extends slightly into the walls
+      wt, 
+      wallOptions
+    ); 
+    // Left Wall
+    this.matter.add.rectangle(
+      this.bucket.leftX - (wt / 2), 
+      this.bucket.floorY - (this.bucket.innerHeight / 2), 
+      wt, 
+      this.bucket.innerHeight, // Make walls extra tall to catch high bounces
+      wallOptions
+    ); 
+    // Right Wall
+    this.matter.add.rectangle(
+      this.bucket.rightX + (wt / 2), 
+      this.bucket.floorY - (this.bucket.innerHeight / 2), 
+      wt, 
+      this.bucket.innerHeight, 
+      wallOptions
+    );
 
     // --- CONSTELLATION CONTAINER UI ---
     const graphics = this.add.graphics();
     
-    // Define the 4 corners of the bucket
-    const tl = { x: width / 2 - 225, y: height - 650 }; // Top Left
-    const bl = { x: width / 2 - 225, y: height - 50 };  // Bottom Left
-    const br = { x: width / 2 + 225, y: height - 50 };  // Bottom Right
-    const tr = { x: width / 2 + 225, y: height - 650 }; // Top Right
+    // Define the 4 corners using our central config!
+    const tl = { x: this.bucket.leftX, y: this.bucket.topY }; 
+    const bl = { x: this.bucket.leftX, y: this.bucket.floorY };  
+    const br = { x: this.bucket.rightX, y: this.bucket.floorY };  
+    const tr = { x: this.bucket.rightX, y: this.bucket.topY }; 
 
     // 1. Draw the ethereal connecting lines
-    graphics.lineStyle(2, 0xffffff, 0.4); // Thin, slightly transparent line
+    graphics.lineStyle(2, 0xffffff, 0.4); 
     graphics.beginPath();
     graphics.moveTo(tl.x, tl.y);
     graphics.lineTo(bl.x, bl.y);
@@ -93,18 +130,13 @@ export default class PlanetTestScene extends Phaser.Scene {
     const corners = [tl, bl, br, tr];
     
     corners.forEach(corner => {
-      // Outer cyan glow
       graphics.fillStyle(0x00ffff, 0.3);
       graphics.fillCircle(corner.x, corner.y, 14);
-      
-      // Inner bright white core
       graphics.fillStyle(0xffffff, 1);
       graphics.fillCircle(corner.x, corner.y, 4);
-      
-      // Twinkle crosshairs
       graphics.lineStyle(2, 0xffffff, 0.8);
-      graphics.lineBetween(corner.x - 10, corner.y, corner.x + 10, corner.y); // Horizontal
-      graphics.lineBetween(corner.x, corner.y - 10, corner.x, corner.y + 10); // Vertical
+      graphics.lineBetween(corner.x - 10, corner.y, corner.x + 10, corner.y); 
+      graphics.lineBetween(corner.x, corner.y - 10, corner.x, corner.y + 10); 
     });
 
     // --- 2. GAME DATA ---
@@ -358,16 +390,17 @@ export default class PlanetTestScene extends Phaser.Scene {
     if (this.isSettingsOpen) return;
 
     if (!this.isGameOver && this.canDrop && this.currentPreview) {
-      // Clamp the X position so the player can't drag the planet through the bucket walls
-      const width = this.scale.width;
-      const leftWall = (width / 2) - 235;
-      const rightWall = (width / 2) + 235;
       
-      // We calculate the actual visual radius to keep the edges inside the box
       const data = this.celestialData[this.currentPreviewId];
       const visualRadius = 64 * data.visualScale; 
 
-      const clampedX = Phaser.Math.Clamp(pointer.x, leftWall + visualRadius, rightWall - visualRadius);
+      // Pull exact boundaries from the config
+      const clampedX = Phaser.Math.Clamp(
+        pointer.x, 
+        this.bucket.leftX + visualRadius - 10, 
+        this.bucket.rightX - visualRadius + 10
+      );
+      
       this.currentPreview.x = clampedX;
     }
   }
@@ -462,11 +495,6 @@ export default class PlanetTestScene extends Phaser.Scene {
     planet.body.isPlanet = true;
     planet.body.planetId = id;
     planet.body.isMerging = false; // Prevents a planet from merging twice in the same frame
-
-    // --- GAME LOGIC TAGS ---
-    planet.body.isPlanet = true;
-    planet.body.planetId = id;
-    planet.body.isMerging = false; 
     
     // Record exactly when this planet was dropped
     planet.setData('spawnTime', this.time.now);
@@ -582,49 +610,33 @@ export default class PlanetTestScene extends Phaser.Scene {
   update(time) {
     if (this.isGameOver) return;
 
-    const width = this.scale.width;
-    const height = this.scale.height;
+    // --- DYNAMIC AIMING LINE ---
+    this.aimLine.clear(); 
 
-    // --- NEW: DYNAMIC AIMING LINE ---
-    this.aimLine.clear(); // Wipe the old line every frame
-
-    // Only draw the line if the player is currently holding a preview planet
     if (this.canDrop && this.currentPreview) {
-      
-      // Calculate exactly where the bottom edge of the current planet is
       const data = this.celestialData[this.currentPreviewId];
       const visualRadius = 64 * data.visualScale;
       const startY = this.currentPreview.y + visualRadius;
       
-      const bucketBottom = this.scale.height - 50;
-
-      // Draw a faint, semi-transparent white line straight down
       this.aimLine.lineStyle(2, 0xffffff, 0.15); 
-      this.aimLine.lineBetween(this.currentPreview.x, startY, this.currentPreview.x, bucketBottom);
+      // Use this.bucket.floorY to always snap the laser to the bottom
+      this.aimLine.lineBetween(this.currentPreview.x, startY, this.currentPreview.x, this.bucket.floorY);
     }
     
-    // The exact visual boundaries of your bucket
-    const bucketTop = height - 650;
-    const bucketBottom = height - 50;
-    const bucketLeft = (width / 2) - 225;
-    const bucketRight = (width / 2) + 225;
-
     // Grab all planets currently in the physics simulation
     const planets = this.children.list.filter(c => c.body && c.body.isPlanet);
 
     planets.forEach(planet => {
       const timeAlive = time - planet.getData('spawnTime');
       
-      // Give the planet a 2-second grace period to fall into the box
       if (timeAlive > 2000) {
-        // getBounds() returns the absolute visual edges of the scaled sprite
         const bounds = planet.getBounds();
         
-        // Check if it is ENTIRELY outside any of the 4 walls
-        const completelyOutLeft = bounds.right < bucketLeft;
-        const completelyOutRight = bounds.left > bucketRight;
-        const completelyOutBottom = bounds.top > bucketBottom;
-        const completelyOutTop = bounds.bottom < bucketTop;
+        // Use our central config to check if they are completely out of bounds
+        const completelyOutLeft = bounds.right < this.bucket.leftX;
+        const completelyOutRight = bounds.left > this.bucket.rightX;
+        const completelyOutBottom = bounds.top > this.bucket.floorY;
+        const completelyOutTop = bounds.bottom < this.bucket.topY;
 
         if (completelyOutLeft || completelyOutRight || completelyOutBottom || completelyOutTop) {
           this.triggerGameOver();
