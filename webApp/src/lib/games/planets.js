@@ -63,14 +63,9 @@ class MainScene extends Phaser.Scene {
   //function to create a planet after collision
   makePlanet(planet, scale, x = 512, y = 0) {
     let sprite;
-    if(planet!=8){
-        sprite = this.matter.add
-        .sprite(x, y, 'planets', planet)
-        .setCircle(64)
-        .setScale(scale, scale);
-    }
-    //Create saturn and its rings
-    else{
+
+    //Check saturn
+    if(planet == 8){
       sprite = this.matter.add
         .sprite(x, y, 'planets', planet)
         .setScale(scale, scale);
@@ -91,6 +86,36 @@ class MainScene extends Phaser.Scene {
 
       sprite.setExistingBody(compoundBody);
       sprite.setPosition(x, y);
+    }
+    //Check black hole
+    else if(planet == 11){
+      sprite = this.matter.add
+        .sprite(x, y, 'planets', planet)
+        .setScale(scale, scale);
+
+      const Bodies = Phaser.Physics.Matter.Matter.Bodies;
+      const Body = Phaser.Physics.Matter.Matter.Body;
+
+      // Inner planet body (tighter circle, centered)
+      const innerCircle = Bodies.circle(0, 0, 128, { label: 'saturn-body' });
+
+      // Left and right ring segments (offset from center)
+      const leftRing  = Bodies.circle(-160, 0, 30, { label: 'saturn-ring' });
+      const rightRing = Bodies.circle( 160, 0, 30, { label: 'saturn-ring' });
+
+      const compoundBody = Body.create({
+        parts: [innerCircle, leftRing, rightRing]
+      });
+
+      sprite.setExistingBody(compoundBody);
+      sprite.setPosition(x, y);
+    }
+    //other planets
+    else{
+      sprite = this.matter.add
+        .sprite(x, y, 'planets', planet)
+        .setCircle(64)
+        .setScale(scale, scale);
     }
 
     sprite.isPlanet = true;
@@ -131,7 +156,7 @@ class MainScene extends Phaser.Scene {
       sprite.setPosition(x, y);
     }
     //Check for black hole
-    if(planetQueue[0] == 11){
+    else if(planetQueue[0] == 11){
       sprite = this.matter.add
         .sprite(x, y, 'planets', planetQueue[0])
         .setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
@@ -187,29 +212,36 @@ class MainScene extends Phaser.Scene {
   }
 
   //Uses the knowledge of what the largest planets are to get next planets
+  //Canot go over 8
   nextPlanet(){
-      return this.random12(largestPlanet - 1);
+      return Math.min(this.random12(largestPlanet - 1), 8);
   }
   
   //Takes two planet sprites, if they are the same a bigger one replaces them
-  collidePlanets(planetA, planetB){  
+  collidePlanets(planetA, planetB){
+        //Check that the planets arent already destroyed
+        if (!planetA.active || !planetB.active) return;
+
         if (planetA.frame.name !== planetB.frame.name) return;
 
-        let xA = planetA.x;
-        let yA = planetA.y;
-        let xB = planetB.x;
-        let yB = planetB.y;
+        //Only make new planet if not black holes
+        if (planetA.frame.name != 11){
+          let xA = planetA.x;
+          let yA = planetA.y;
+          let xB = planetB.x;
+          let yB = planetB.y;
 
-        let x = (xA + xB) / 2;
-        let y = (yA + yB) / 2;
+          let x = (xA + xB) / 2;
+          let y = (yA + yB) / 2;
 
-        //Get sprite of new planet
-        let newPlanet =  parseInt(planetA.frame.name) + 1;
+          //Get sprite of new planet
+          let newPlanet =  parseInt(planetA.frame.name) + 1; 
+          planetsArray.push(this.makePlanet(newPlanet, planets_scale[newPlanet], x, y));
+        }
         //Remove old planets
         planetA.destroy();
         planetB.destroy();
         
-        planetsArray.push(this.makePlanet(newPlanet, planets_scale[newPlanet], x, y));
   }
   
   //Updates
@@ -241,10 +273,8 @@ class MainScene extends Phaser.Scene {
     //Background
     this.add.image(500, 500, 'background');
     //Initialize queue
-    //planetQueue[0] = this.nextPlanet();
-    planetQueue[0] = 11;
-    planetQueue[1] = 11;
-    //planetQueue[1] = this.nextPlanet();
+    planetQueue[0] = this.nextPlanet();
+    planetQueue[1] = this.nextPlanet();
     //Show current planet at pointer position
     this.currentSprite = this.add.sprite(500, 112, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
     //print next planet
@@ -293,7 +323,7 @@ class MainScene extends Phaser.Scene {
     //Bounds of the world (whole element)
     this.matter.world.setBounds(0, 0, width, height, 10, true, true, true);
     //Gravity
-    this.matter.world.setGravity(0, 1, 0.0025);
+    this.matter.world.setGravity(0, 1, 0.001);
 
     //Ground and walls
     //Graphics object
