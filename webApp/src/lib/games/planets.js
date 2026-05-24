@@ -309,7 +309,7 @@ class MainScene extends Phaser.Scene {
     const W = this.scale.width;
     const H = this.scale.height;
     const margin = 128;
-    const thick = 8;
+    const thick = 12;
 
     this.topY = H * 0.15; // 15% from the top, adjust the fraction as needed
     const innerTop = this.topY;
