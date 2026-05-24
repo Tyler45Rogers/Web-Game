@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 
-const width = 1000;
-const height = 1000;
+const width = 800;
+const height = 800;
 
 //Planets setup
 const planets = {
@@ -34,6 +34,21 @@ const planets_scale = {
   11: 3.00   // black_hole
 };
 
+const planets_minYValue = {
+  0: 64 * 0.25,   // pluto   - radius ~16
+  1: 64 * 0.35,   // moon    - radius ~22
+  2: 64 * 0.45,   // mercury - radius ~29
+  3: 64 * 0.55,   // mars    - radius ~35
+  4: 64 * 0.65,   // venus   - radius ~42
+  5: 64 * 0.70,   // earth   - radius ~45
+  6: 64 * 0.90,   // neptune - radius ~58
+  7: 64 * 1.00,   // uranus  - radius ~64
+  8: 64 * 2.00,   // saturn  - radius ~128
+  9: 64 * 1.45,   // jupiter - radius ~93
+  10: 64 * 2.10,  // sun     - radius ~134
+  11: 64 * 3.00   // black_hole - radius ~192
+};
+
 let largestPlanet = 1;
 //Array containing the current planet to be made and the next planet
 let planetQueue = [];
@@ -44,12 +59,14 @@ let planetsArray = [];
 //Boolean of whether a planet is falling
 let isPlanetFalling = true;
 
-//Clamp x coordiinates for the planets to 144 and 744
-const clamp = (val) => Math.min(Math.max(val, 160), 840);
-
 class MainScene extends Phaser.Scene {
   constructor() {
     super('main');
+  }
+
+  //Clamp x coordiinates for the planets to borders
+  clamp(val) {
+    return Math.min(Math.max(val, this.clampMin), this.clampMax);
   }
 
   preload() {
@@ -129,9 +146,10 @@ class MainScene extends Phaser.Scene {
   }
 
   //Creates planets when user clicks
-  newPlanet(x = 512, y = 112) {
+  newPlanet(x = 512, y) {
+      if (y === undefined) y = this.topY;
     let sprite;
-    x = clamp(x);
+    x = this.clamp(x);
     //Check for saturn
     if(planetQueue[0] == 8){
       sprite = this.matter.add
@@ -217,10 +235,10 @@ class MainScene extends Phaser.Scene {
   //When largest planet is 7, next planet can be any planet from 0-7
   nextPlanet(){
       if (largestPlanet < 5) {
-        return Math.min(this.random12(largestPlanet - 1), 3);
+        return Math.min(this.random12(largestPlanet - 2), 3);
       }
 
-      return Math.min(this.random12(largestPlanet - 1), 7);
+      return Math.min(this.random12(largestPlanet - 2), 7);
   }
   
   //Takes two planet sprites, if they are the same a bigger one replaces them
@@ -252,8 +270,8 @@ class MainScene extends Phaser.Scene {
   
   //Updates
   update(){
-    this.trajectoryLine.x = clamp(this.input.activePointer.x);
-    this.currentSprite.x = clamp(this.input.activePointer.x);
+    this.trajectoryLine.x = this.clamp(this.input.activePointer.x);
+    this.currentSprite.x = this.clamp(this.input.activePointer.x);
 
     //Check whether a planet is falling
     for (let planet of planetsArray){
@@ -272,23 +290,49 @@ class MainScene extends Phaser.Scene {
     else{
       this.trajectoryLine.setAlpha(1);
     }
+
+    //Check for loss condition - planet goes over the top border
+    for (let planet of planetsArray){
+      if (! planet.body) continue;
+      else{
+        //If y value over the limit - TODO IMPLEMENT LOSING
+        if(planet.y < this.topY + planets_minYValue[planet.frame.name] && !planet.isFalling){
+          console.log("You Lose!!");
+        }
+      }  
+    }
   }
 
-
   create() {
+    //Border Variables
+    //Variables for borders
+    const W = this.scale.width;
+    const H = this.scale.height;
+    const margin = 128;
+    const thick = 8;
+
+    this.topY = H * 0.15; // 15% from the top, adjust the fraction as needed
+    const innerTop = this.topY;
+    const innerBottom = H - margin - thick / 2;
+    const innerHeight = innerBottom - innerTop;
+    const innerCenterY = innerTop + innerHeight / 2;
+    const borderColor = 0xffffff;
+    this.clampMin = margin + thick;           // left wall inner edge
+    this.clampMax = W - margin - thick;       // right wall inner edge
+
     //Background
     this.add.image(500, 500, 'background');
     //Initialize queue
     planetQueue[0] = this.nextPlanet();
     planetQueue[1] = this.nextPlanet();
     //Show current planet at pointer position
-    this.currentSprite = this.add.sprite(500, 112, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
+    this.currentSprite = this.add.sprite(500, this.topY, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
     //print next planet
     this.nextPlanetText = this.add.text(10, 10, nextText, { fontSize: '24px', fill: '#fff' });
     //Sprite for next planet
     this.nextSprite = this.add.sprite((this.nextPlanetText.width / 2) + 10, this.nextPlanetText.height + 32, 'planets', planetQueue[1]).setScale(0.5);
     //Line following mouse to show trajectory
-    this.trajectoryLine = this.add.sprite(0, 112, 'border').setScale(0.015, 6);
+    this.trajectoryLine = this.add.sprite(0, this.topY, 'border').setScale(0.015, 6);
     this.trajectoryLine.setOrigin(0.0, 0)
 
 
@@ -332,24 +376,42 @@ class MainScene extends Phaser.Scene {
     this.matter.world.setBounds(0, 0, width, height, 10, true, true, true);
     //Gravity
     this.matter.world.setGravity(0, 1, 0.001);
-
-    //Ground and walls
     //Graphics object
     let graphics = this.add.graphics();
     graphics.fillStyle(0x808080);
-    //Bottom rectangle (will be bottom for game)
-    this.bottomRect = this.add.rectangle(500, this.scale.height - 128, this.scale.width - 256, 32, 0x808080);
 
+    //Creating Borders - Scale with screen size
 
-    this.leftRect = this.add.rectangle(128 + 16, 484, 32, this.scale.height - 256, 0x808080);
-    this.rightRect = this.add.rectangle(this.scale.width - 128 - 16, 484, 32, this.scale.height - 256, 0x808080);
-    this.matter.add.gameObject(this.leftRect, {static: true});
-    this.matter.add.gameObject(this.rightRect, {static: true});
-    this.matter.add.gameObject(this.bottomRect, {static: true});
+    // Top border (thin line)
+    this.topRect = this.add.rectangle(
+        W / 2, this.topY,
+        W - margin * 2, 2,
+        borderColor
+    );
 
-    this.leftRect.setStatic(true);
-    this.rightRect.setStatic(true);
-    this.bottomRect.setStatic(true);
+    // Bottom border
+    this.bottomRect = this.add.rectangle(
+        W / 2, H - margin - thick / 2,
+        W - margin * 2, thick,
+        borderColor
+    );
+    this.matter.add.gameObject(this.bottomRect, { isStatic: true });
+
+    // Left border
+    this.leftRect = this.add.rectangle(
+        margin + thick / 2, innerCenterY,
+        thick, innerHeight,
+        borderColor
+    );
+    this.matter.add.gameObject(this.leftRect, { isStatic: true });
+
+    // Right border
+    this.rightRect = this.add.rectangle(
+        W - margin - thick / 2, innerCenterY,
+        thick, innerHeight,
+        borderColor
+    );
+    this.matter.add.gameObject(this.rightRect, { isStatic: true });
   
   }
 }
@@ -363,7 +425,7 @@ export function createGame(parent) {
     physics: {
       default: 'matter',
       matter: {
-        debug: true
+        debug: false
       }
     },
     scene: [MainScene]
