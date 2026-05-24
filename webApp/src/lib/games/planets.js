@@ -279,8 +279,7 @@ class MainScene extends Phaser.Scene {
     //Background
     this.add.image(500, 500, 'background');
     //Initialize queue
-    //planetQueue[0] = this.nextPlanet();
-    planetQueue[0] = 11;
+    planetQueue[0] = this.nextPlanet();
     planetQueue[1] = this.nextPlanet();
     //Show current planet at pointer position
     this.currentSprite = this.add.sprite(500, 112, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
