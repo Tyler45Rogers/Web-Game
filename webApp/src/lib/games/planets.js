@@ -20,18 +20,18 @@ const planets = {
 };
 
 const planets_scale = {
-  0: 0.36,   // pluto
-  1: 0.432,  // moon
-  2: 0.5184, // mercury
-  3: 0.6336, // mars
-  4: 0.7776, // venus
-  5: 0.972,  // earth
-  6: 1.224,  // neptune
-  7: 1.476,  // uranus
-  8: 1.8,    // saturn
-  9: 2.16,   // jupiter
-  10: 2.52,  // sun
-  11: 2.88   // black_hole
+  0: 0.25,   // pluto
+  1: 0.35,   // moon
+  2: 0.45,   // mercury
+  3: 0.55,   // mars
+  4: 0.65,   // venus
+  5: 0.70,   // earth
+  6: 0.90,   // neptune
+  7: 1.00,   // uranus
+  8: 2.00,   // saturn
+  9: 1.45,   // jupiter
+  10: 2.10,  // sun
+  11: 3.00   // black_hole
 };
 
 let largestPlanet = 1;
@@ -62,10 +62,36 @@ class MainScene extends Phaser.Scene {
 
   //function to create a planet after collision
   makePlanet(planet, scale, x = 512, y = 0) {
-    const sprite = this.matter.add
-      .sprite(x, y, 'planets', planet)
-      .setCircle(64)
-      .setScale(scale, scale);
+    let sprite;
+    if(planet!=8){
+        sprite = this.matter.add
+        .sprite(x, y, 'planets', planet)
+        .setCircle(64)
+        .setScale(scale, scale);
+    }
+    //Create saturn and its rings
+    else{
+      sprite = this.matter.add
+        .sprite(x, y, 'planets', planet)
+        .setScale(scale, scale);
+
+      const Bodies = Phaser.Physics.Matter.Matter.Bodies;
+      const Body = Phaser.Physics.Matter.Matter.Body;
+
+      // Inner planet body (tighter circle, centered)
+      const innerCircle = Bodies.circle(0, 0, 64, { label: 'saturn-body' });
+
+      // Left and right ring segments (offset from center)
+      const leftRing  = Bodies.circle(-80, 0, 24, { label: 'saturn-ring' });
+      const rightRing = Bodies.circle( 80, 0, 24, { label: 'saturn-ring' });
+
+      const compoundBody = Body.create({
+        parts: [innerCircle, leftRing, rightRing]
+      });
+
+      sprite.setExistingBody(compoundBody);
+      sprite.setPosition(x, y);
+    }
 
     sprite.isPlanet = true;
     sprite.isFalling = false;
@@ -79,11 +105,61 @@ class MainScene extends Phaser.Scene {
 
   //Creates planets when user clicks
   newPlanet(x = 512, y = 112) {
+    let sprite;
     x = clamp(x);
-    const sprite = this.matter.add
-      .sprite(x, y, 'planets', planetQueue[0])
-      .setCircle(64)
-      .setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
+    //Check for saturn
+    if(planetQueue[0] == 8){
+      sprite = this.matter.add
+        .sprite(x, y, 'planets', planetQueue[0])
+        .setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
+
+      const Bodies = Phaser.Physics.Matter.Matter.Bodies;
+      const Body = Phaser.Physics.Matter.Matter.Body;
+
+      // Inner planet body (tighter circle, centered)
+      const innerCircle = Bodies.circle(0, 0, 64, { label: 'saturn-body' });
+
+      // Left and right ring segments (offset from center)
+      const leftRing  = Bodies.circle(-80, 0, 24, { label: 'saturn-ring' });
+      const rightRing = Bodies.circle( 80, 0, 24, { label: 'saturn-ring' });
+
+      const compoundBody = Body.create({
+        parts: [innerCircle, leftRing, rightRing]
+      });
+
+      sprite.setExistingBody(compoundBody);
+      sprite.setPosition(x, y);
+    }
+    //Check for black hole
+    if(planetQueue[0] == 11){
+      sprite = this.matter.add
+        .sprite(x, y, 'planets', planetQueue[0])
+        .setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
+
+      const Bodies = Phaser.Physics.Matter.Matter.Bodies;
+      const Body = Phaser.Physics.Matter.Matter.Body;
+
+      // Inner planet body (tighter circle, centered)
+      const innerCircle = Bodies.circle(0, 0, 128, { label: 'saturn-body' });
+
+      // Left and right ring segments (offset from center)
+      const leftRing  = Bodies.circle(-160, 0, 30, { label: 'saturn-ring' });
+      const rightRing = Bodies.circle( 160, 0, 30, { label: 'saturn-ring' });
+
+      const compoundBody = Body.create({
+        parts: [innerCircle, leftRing, rightRing]
+      });
+
+      sprite.setExistingBody(compoundBody);
+      sprite.setPosition(x, y);
+    }
+    //Other planets
+    else{
+      sprite = this.matter.add
+        .sprite(x, y, 'planets', planetQueue[0])
+        .setCircle(64)
+        .setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
+    }
 
     sprite.isPlanet = true;
     sprite.isFalling = true;
@@ -93,11 +169,11 @@ class MainScene extends Phaser.Scene {
       largestPlanet = planetQueue[0];
     }
 
-    //Update nextSprite
-    this.nextSprite.setTexture('planets', planetQueue[1]);
     //Update planet queue
     planetQueue[0] = planetQueue[1];
     planetQueue[1] = this.nextPlanet();
+    //Update nextSprite
+    this.nextSprite.setTexture('planets', planetQueue[1]);
     //set new currentPlanet sprite
     this.currentSprite.setFrame(planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
     return sprite; 
@@ -165,8 +241,10 @@ class MainScene extends Phaser.Scene {
     //Background
     this.add.image(500, 500, 'background');
     //Initialize queue
-    planetQueue[0] = this.nextPlanet();
-    planetQueue[1] = this.nextPlanet();
+    //planetQueue[0] = this.nextPlanet();
+    planetQueue[0] = 11;
+    planetQueue[1] = 11;
+    //planetQueue[1] = this.nextPlanet();
     //Show current planet at pointer position
     this.currentSprite = this.add.sprite(500, 112, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
     //print next planet
@@ -192,19 +270,22 @@ class MainScene extends Phaser.Scene {
     this.matter.world.on("collisionstart", (event, bodyA, bodyB) => {
       //If same planet, remove them and add new planet in their location
       event.pairs.forEach(pair => {
+        const getGameObject = (body) => {
+          if (body.gameObject) return body.gameObject;
+          if (body.parent && body.parent.gameObject) return body.parent.gameObject;
+          return null;
+        };
 
-        const planetA = pair.bodyA.gameObject;
-        const planetB = pair.bodyB.gameObject;
-
+        const planetA = getGameObject(pair.bodyA);
+        const planetB = getGameObject(pair.bodyB);
         //Make sure they exist
         if (!planetA || !planetB) return;
-
+        //Check that it isnt a planet colliding with itself
+        if(planetA === planetB) return;
         //Check they are planets
         if (!planetA.isPlanet || !planetB.isPlanet) return;
-
         //Call collide function
         this.collidePlanets(planetA, planetB);
-
       })
 
     })
