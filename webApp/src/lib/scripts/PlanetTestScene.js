@@ -22,6 +22,7 @@ export default class PlanetTestScene extends Phaser.Scene {
     this.isEduMode = (data && data.isEduMode !== undefined) ? data.isEduMode : false;
     this.isSettingsOpen = (data && data.keepSettingsOpen !== undefined) ? data.keepSettingsOpen : false;
     this.particlesEnabled = (data && data.particlesEnabled !== undefined) ? data.particlesEnabled : true;
+    this.isDevMode = (data && data.isDevMode !== undefined) ? data.isDevMode : false;
     this.isGameOver = false;
     this.canDrop = true;
   }
@@ -141,17 +142,17 @@ export default class PlanetTestScene extends Phaser.Scene {
 
     // --- 2. GAME DATA ---
     this.celestialData = [
-      { id: 0, name: 'Pluto', visualScale: 0.25, bodyRadius: 62, originY: 0.5 }, 
-      { id: 1, name: 'Moon', visualScale: 0.35, bodyRadius: 62, originY: 0.5 }, 
-      { id: 2, name: 'Mercury', visualScale: 0.45, bodyRadius: 62, originY: 0.5 }, 
-      { id: 3, name: 'Mars', visualScale: 0.55, bodyRadius: 62, originY: 0.5 }, 
-      { id: 4, name: 'Venus', visualScale: 0.65, bodyRadius: 62, originY: 0.5 }, 
-      { id: 5, name: 'Earth', visualScale: 0.70, bodyRadius: 62, originY: 0.5 }, 
-      { id: 6, name: 'Neptune', visualScale: 0.90, bodyRadius: 62, originY: 0.5 },
-      { id: 7, name: 'Uranus', visualScale: 1.00, bodyRadius: 62, originY: 0.5 }, 
-      { id: 8, name: 'Saturn', visualScale: 2, originY: 0.5, isCompound: true, coreRadius: 38, ringWidth: 120, ringHeight: 30, ringAngle: 0 },
-      { id: 9, name: 'Jupiter', visualScale: 1.45, bodyRadius: 60, originY: 0.5 }, 
-      { id: 10, name: 'Sun', visualScale: 2.10, originY: 0.5, isBumpy: true, coreRadius: 46, bumpCount: 4, bumpWidth: 110, bumpHeight: 20 },
+      { id: 0, name: 'Pluto', visualScale: 0.20, bodyRadius: 62, originY: 0.5 }, 
+      { id: 1, name: 'Moon', visualScale: 0.30, bodyRadius: 62, originY: 0.5 }, 
+      { id: 2, name: 'Mercury', visualScale: 0.40, bodyRadius: 62, originY: 0.5 }, 
+      { id: 3, name: 'Mars', visualScale: 0.50, bodyRadius: 62, originY: 0.5 }, 
+      { id: 4, name: 'Venus', visualScale: 0.60, bodyRadius: 62, originY: 0.5 }, 
+      { id: 5, name: 'Earth', visualScale: 0.65, bodyRadius: 62, originY: 0.5 }, 
+      { id: 6, name: 'Neptune', visualScale: 0.85, bodyRadius: 62, originY: 0.5 },
+      { id: 7, name: 'Uranus', visualScale: 0.95, bodyRadius: 62, originY: 0.5 }, 
+      { id: 8, name: 'Saturn', visualScale: 1.80, originY: 0.5, isCompound: true, coreRadius: 38, ringWidth: 120, ringHeight: 30, ringAngle: 0 },
+      { id: 9, name: 'Jupiter', visualScale: 1.40, bodyRadius: 60, originY: 0.5 }, 
+      { id: 10, name: 'Sun', visualScale: 2.0, originY: 0.5, isBumpy: true, coreRadius: 46, bumpCount: 4, bumpWidth: 110, bumpHeight: 20 },
       { id: 11, name: 'Black Hole', visualScale: 3, originY: 0.5, isCompound: true, coreRadius: 40, ringWidth: 120, ringHeight: 25, ringAngle: 0 }
     ];
 
@@ -172,7 +173,7 @@ export default class PlanetTestScene extends Phaser.Scene {
     // Phaser 3.60+ Syntax: Create the emitter directly!
     // this.add.particles(x, y, texture, config)
     this.dustEmitter = this.add.particles(0, 0, 'spark', {
-      speed: { min: 100, max: 200 }, // Widened the speed so it looks good for all sizes
+      speed: { min: 200, max: 500 },
       angle: { min: 0, max: 360 },
       scale: { start: 1.5, end: 0 }, 
       alpha: { start: 1, end: 0 },   
@@ -232,7 +233,8 @@ export default class PlanetTestScene extends Phaser.Scene {
     this.nextPlanetUI.setDepth(100);
 
     // Pre-roll the very first "next" planet so it's ready for spawnNextPreview()
-    this.nextPreviewId = Phaser.Math.Between(0, this.maxSpawnId);
+    const spawnCeiling = this.isDevMode ? 11 : this.maxSpawnId;
+    this.nextPreviewId = Phaser.Math.Between(0, spawnCeiling);
 
     // --- 5.7.5 EVOLUTION LEGEND UI ---
     const legendX = width - 80; // Positioned safely to the right of the bucket
@@ -283,20 +285,20 @@ export default class PlanetTestScene extends Phaser.Scene {
     const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85);
     overlay.setInteractive(); // Giving it interactivity absorbs background clicks
 
-    // 4. Settings Panel Background
-    const panel = this.add.rectangle(width / 2, height / 2, 400, 300, 0x050510, 1);
+    // 4. Settings Panel Background (Made taller: 360px)
+    const panel = this.add.rectangle(width / 2, height / 2, 400, 360, 0x050510, 1);
     panel.setStrokeStyle(4, 0x00ffff);
 
-    // 5. Menu Title
-    const settingsTitle = this.add.text(width / 2, height / 2 - 100, 'SYSTEM SETTINGS', {
+    // 5. Menu Title (Shifted to Y - 130)
+    const settingsTitle = this.add.text(width / 2, height / 2 - 130, 'SYSTEM SETTINGS', {
       fontSize: '32px',
       fontFamily: '"Courier New", Courier, monospace',
       color: '#ffffff',
       shadow: { fill: true, blur: 10, color: '#00ffff', offsetY: 0, offsetX: 0 }
     }).setOrigin(0.5);
 
-    // 6. The EDU Toggle (Shifted up slightly to Y - 30)
-    this.eduToggle = this.add.text(width / 2, height / 2 - 30, this.isEduMode ? '[X] EDU MODE' : '[ ] EDU MODE', {
+    // 6. The EDU Toggle (Shifted to Y - 60)
+    this.eduToggle = this.add.text(width / 2, height / 2 - 60, this.isEduMode ? '[X] EDU MODE' : '[ ] EDU MODE', {
       fontSize: '24px',
       fontFamily: '"Courier New", Courier, monospace',
       color: this.isEduMode ? '#00ff00' : '#aaaaaa'
@@ -304,14 +306,15 @@ export default class PlanetTestScene extends Phaser.Scene {
 
     this.eduToggle.on('pointerdown', () => {
       this.scene.restart({ 
-        isEduMode: !this.isEduMode,        // Flip this one
-        particlesEnabled: this.particlesEnabled, // Keep this one the same
+        isEduMode: !this.isEduMode,        
+        particlesEnabled: this.particlesEnabled, 
+        isDevMode: this.isDevMode, // --- NEW ---
         keepSettingsOpen: true 
       }); 
     });
 
-    // --- NEW: 6.5 The PARTICLES Toggle (Positioned at Y + 30) ---
-    this.particleToggle = this.add.text(width / 2, height / 2 + 30, this.particlesEnabled ? '[X] PARTICLES' : '[ ] PARTICLES', {
+    // 6.5 The PARTICLES Toggle (Shifted to Y - 10)
+    this.particleToggle = this.add.text(width / 2, height / 2 - 10, this.particlesEnabled ? '[X] PARTICLES' : '[ ] PARTICLES', {
       fontSize: '24px',
       fontFamily: '"Courier New", Courier, monospace',
       color: this.particlesEnabled ? '#00ff00' : '#aaaaaa'
@@ -319,14 +322,31 @@ export default class PlanetTestScene extends Phaser.Scene {
 
     this.particleToggle.on('pointerdown', () => {
       this.scene.restart({ 
-        isEduMode: this.isEduMode,              // Keep this one the same
-        particlesEnabled: !this.particlesEnabled, // Flip this one
+        isEduMode: this.isEduMode,              
+        particlesEnabled: !this.particlesEnabled, 
+        isDevMode: this.isDevMode, // --- NEW ---
         keepSettingsOpen: true 
       }); 
     });
 
-    // 7. Close Menu Button (Shifted down slightly to Y + 110)
-    const closeBtn = this.add.text(width / 2, height / 2 + 110, '> RESUME', {
+    // --- NEW: 6.6 The DEV MODE Toggle (Positioned at Y + 40) ---
+    this.devToggle = this.add.text(width / 2, height / 2 + 40, this.isDevMode ? '[X] DEV MODE' : '[ ] DEV MODE', {
+      fontSize: '24px',
+      fontFamily: '"Courier New", Courier, monospace',
+      color: this.isDevMode ? '#00ff00' : '#aaaaaa'
+    }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+
+    this.devToggle.on('pointerdown', () => {
+      this.scene.restart({ 
+        isEduMode: this.isEduMode,              
+        particlesEnabled: this.particlesEnabled, 
+        isDevMode: !this.isDevMode, // --- Flip this one ---
+        keepSettingsOpen: true 
+      }); 
+    });
+
+    // 7. Close Menu Button (Shifted to Y + 120)
+    const closeBtn = this.add.text(width / 2, height / 2 + 120, '> RESUME', {
       fontSize: '24px',
       fontFamily: '"Courier New", Courier, monospace',
       color: '#00ffff'
@@ -338,7 +358,7 @@ export default class PlanetTestScene extends Phaser.Scene {
     });
 
     // 8. Add all pieces into the Container
-    this.settingsContainer.add([overlay, panel, settingsTitle, this.eduToggle, this.particleToggle, closeBtn]);
+    this.settingsContainer.add([overlay, panel, settingsTitle, this.eduToggle, this.particleToggle, this.devToggle, closeBtn]);
 
     // 9. Wire up the main screen button to open the menu
     settingsBtn.on('pointerdown', () => {
@@ -363,7 +383,8 @@ export default class PlanetTestScene extends Phaser.Scene {
     this.currentPreviewId = this.nextPreviewId;
     
     // 2. Roll a new planet to replace it in the "Next" box
-    this.nextPreviewId = Phaser.Math.Between(0, this.maxSpawnId);
+    const spawnCeiling = this.isDevMode ? 11 : this.maxSpawnId;
+    this.nextPreviewId = Phaser.Math.Between(0, spawnCeiling);
 
     // 3. Update the UI sprite to show the new next planet
     const nextData = this.celestialData[this.nextPreviewId];
@@ -567,7 +588,7 @@ export default class PlanetTestScene extends Phaser.Scene {
 
                 // --- THE JUICE: PARTICLES ---
                 if (this.particlesEnabled) {
-                  const particleCount = 2 + (nextId * 2); 
+                  const particleCount = 2 + (nextId * 4); 
                   this.dustEmitter.explode(particleCount, midX, midY);
                 }
 
@@ -699,6 +720,7 @@ export default class PlanetTestScene extends Phaser.Scene {
       this.scene.restart({
         isEduMode: this.isEduMode,
         particlesEnabled: this.particlesEnabled,
+        isDevMode: this.isDevMode, // --- NEW ---
         keepSettingsOpen: false 
       }); 
     });
