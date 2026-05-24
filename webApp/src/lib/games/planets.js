@@ -74,11 +74,11 @@ class MainScene extends Phaser.Scene {
       const Body = Phaser.Physics.Matter.Matter.Body;
 
       // Inner planet body (tighter circle, centered)
-      const innerCircle = Bodies.circle(0, 0, 64, { label: 'saturn-body' });
+      const innerCircle = Bodies.circle(0, 0, 70, { label: 'saturn-body' });
 
       // Left and right ring segments (offset from center)
-      const leftRing  = Bodies.circle(-80, 0, 24, { label: 'saturn-ring' });
-      const rightRing = Bodies.circle( 80, 0, 24, { label: 'saturn-ring' });
+      const leftRing  = Bodies.circle(-90, -0, 30, { label: 'saturn-ring' });
+      const rightRing = Bodies.circle( 90, 0, 30, { label: 'saturn-ring' });
 
       const compoundBody = Body.create({
         parts: [innerCircle, leftRing, rightRing]
@@ -142,11 +142,11 @@ class MainScene extends Phaser.Scene {
       const Body = Phaser.Physics.Matter.Matter.Body;
 
       // Inner planet body (tighter circle, centered)
-      const innerCircle = Bodies.circle(0, 0, 64, { label: 'saturn-body' });
+      const innerCircle = Bodies.circle(0, 0, 70, { label: 'saturn-body' });
 
       // Left and right ring segments (offset from center)
-      const leftRing  = Bodies.circle(-80, 0, 24, { label: 'saturn-ring' });
-      const rightRing = Bodies.circle( 80, 0, 24, { label: 'saturn-ring' });
+      const leftRing  = Bodies.circle(-90, -0, 30, { label: 'saturn-ring' });
+      const rightRing = Bodies.circle( 90, 0, 30, { label: 'saturn-ring' });
 
       const compoundBody = Body.create({
         parts: [innerCircle, leftRing, rightRing]
@@ -212,9 +212,15 @@ class MainScene extends Phaser.Scene {
   }
 
   //Uses the knowledge of what the largest planets are to get next planets
-  //Canot go over 8
+  //Cannot go over 7
+  //If largest planet is 3, next planet can only be 0, 1, 2, or 3
+  //When largest planet is 7, next planet can be any planet from 0-7
   nextPlanet(){
-      return Math.min(this.random12(largestPlanet - 1), 8);
+      if (largestPlanet < 5) {
+        return Math.min(this.random12(largestPlanet - 1), 3);
+      }
+
+      return Math.min(this.random12(largestPlanet - 1), 7);
   }
   
   //Takes two planet sprites, if they are the same a bigger one replaces them
@@ -254,7 +260,7 @@ class MainScene extends Phaser.Scene {
       if (! planet.body) continue;
       else{
         let speed = Math.abs(planet.body.velocity.y);
-        if (speed > 0.2) isPlanetFalling = false;
+        if (speed > 0.5) isPlanetFalling = false;
         else isPlanetFalling = true;
       }
     }
@@ -273,7 +279,8 @@ class MainScene extends Phaser.Scene {
     //Background
     this.add.image(500, 500, 'background');
     //Initialize queue
-    planetQueue[0] = this.nextPlanet();
+    //planetQueue[0] = this.nextPlanet();
+    planetQueue[0] = 11;
     planetQueue[1] = this.nextPlanet();
     //Show current planet at pointer position
     this.currentSprite = this.add.sprite(500, 112, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
@@ -291,6 +298,8 @@ class MainScene extends Phaser.Scene {
     //First planet is made here, need to show what it is
     //spawn planet at mouse x coordinate
     this.input.on('pointerup', function (pointer) {
+        //Cannot spawn if a planet is falling
+        if (!isPlanetFalling) return;
         // Spawns the planet using the mouse's X coordinate and a fixed Y coordinate
         planetsArray.push(this.newPlanet(pointer.x));
     }, this);
