@@ -39,6 +39,10 @@ let largestPlanet = 1;
 let planetQueue = [];
 //Text for next planet
 let nextText = "Next Planet:\n";
+//Array of all planet sprites
+let planetsArray = [];
+//Boolean of whether a planet is falling
+let isPlanetFalling = true;
 
 //Clamp x coordiinates for the planets to 144 and 744
 const clamp = (val) => Math.min(Math.max(val, 160), 840);
@@ -64,6 +68,7 @@ class MainScene extends Phaser.Scene {
       .setScale(scale, scale);
 
     sprite.isPlanet = true;
+    sprite.isFalling = false;
 
     //Set largest planet
     if(largestPlanet < planet){
@@ -72,6 +77,7 @@ class MainScene extends Phaser.Scene {
     return sprite; 
   }
 
+  //Creates planets when user clicks
   newPlanet(x = 512, y = 112) {
     x = clamp(x);
     const sprite = this.matter.add
@@ -80,6 +86,7 @@ class MainScene extends Phaser.Scene {
       .setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
 
     sprite.isPlanet = true;
+    sprite.isFalling = true;
 
     //Set largest planet
     if(largestPlanet < planetQueue[0]){
@@ -88,15 +95,15 @@ class MainScene extends Phaser.Scene {
 
     //Update nextSprite
     this.nextSprite.setTexture('planets', planetQueue[1]);
-
     //Update planet queue
     planetQueue[0] = planetQueue[1];
     planetQueue[1] = this.nextPlanet();
-
-  
-
+    //set new currentPlanet sprite
+    this.currentSprite.setFrame(planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
     return sprite; 
   }
+
+  
 
   //Get random num 0-11
   random12(max){
@@ -126,23 +133,58 @@ class MainScene extends Phaser.Scene {
         planetA.destroy();
         planetB.destroy();
         
-        this.makePlanet(newPlanet, planets_scale[newPlanet], x, y);
+        planetsArray.push(this.makePlanet(newPlanet, planets_scale[newPlanet], x, y));
   }
   
+  //Updates
+  update(){
+    this.trajectoryLine.x = clamp(this.input.activePointer.x);
+    this.currentSprite.x = clamp(this.input.activePointer.x);
+
+    //Check whether a planet is falling
+    for (let planet of planetsArray){
+      if (! planet.body) continue;
+      else{
+        let speed = Math.abs(planet.body.velocity.y);
+        if (speed > 0.2) isPlanetFalling = false;
+        else isPlanetFalling = true;
+      }
+    }
+
+    //If a planet is falling, trajectory line is not visible
+    if(!isPlanetFalling){
+      this.trajectoryLine.setAlpha(0);
+    }
+    else{
+      this.trajectoryLine.setAlpha(1);
+    }
+  }
+
+
   create() {
     //Background
     this.add.image(500, 500, 'background');
     //Initialize queue
     planetQueue[0] = this.nextPlanet();
     planetQueue[1] = this.nextPlanet();
+    //Show current planet at pointer position
+    this.currentSprite = this.add.sprite(500, 112, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
     //print next planet
     this.nextPlanetText = this.add.text(10, 10, nextText, { fontSize: '24px', fill: '#fff' });
     //Sprite for next planet
     this.nextSprite = this.add.sprite((this.nextPlanetText.width / 2) + 10, this.nextPlanetText.height + 32, 'planets', planetQueue[1]).setScale(0.5);
+    //Line following mouse to show trajectory
+    this.trajectoryLine = this.add.sprite(0, 112, 'border').setScale(0.015, 6);
+    this.trajectoryLine.setOrigin(0.0, 0)
+
+
+
+
+    //First planet is made here, need to show what it is
     //spawn planet at mouse x coordinate
     this.input.on('pointerup', function (pointer) {
         // Spawns the planet using the mouse's X coordinate and a fixed Y coordinate
-        this.newPlanet(pointer.x)
+        planetsArray.push(this.newPlanet(pointer.x));
     }, this);
 
 
