@@ -136,7 +136,7 @@ class MainScene extends Phaser.Scene {
     }
 
     sprite.isPlanet = true;
-    sprite.isFalling = false;
+    sprite.isFalling = true;
 
     //Set largest planet
     if(largestPlanet < planet){
