@@ -147,7 +147,7 @@ class MainScene extends Phaser.Scene {
 
   //Creates planets when user clicks
   newPlanet(x = 512, y) {
-      if (y === undefined) y = this.topY;
+      if (y === undefined) y = this.topY - 50;
     let sprite;
     x = this.clamp(x);
     //Check for saturn
@@ -270,6 +270,8 @@ class MainScene extends Phaser.Scene {
   
   //Updates
   update(){
+    if (this.isGameOver) return;
+    
     this.trajectoryLine.x = this.clamp(this.input.activePointer.x);
     this.currentSprite.x = this.clamp(this.input.activePointer.x);
 
@@ -297,13 +299,59 @@ class MainScene extends Phaser.Scene {
       else{
         //If y value over the limit - TODO IMPLEMENT LOSING
         if(planet.y < this.topY + planets_minYValue[planet.frame.name] && !planet.isFalling){
-          console.log("You Lose!!");
-        }
-      }  
+          this.triggerGameOver();
+        }  
+      }
     }
   }
 
+  triggerGameOver() {
+    if (this.isGameOver) return;
+    this.isGameOver = true;
+
+    // Freeze all physics
+    this.matter.world.setGravity(0, 0);
+    planetsArray.forEach(p => {
+      if (p.body) this.matter.body.setStatic(p.body, true);
+    });
+
+    // Dark overlay
+    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.7);
+
+    // Game Over text
+    this.add.text(width / 2, height / 2 - 80, 'GAME OVER', {
+      fontSize: '64px',
+      fill: '#ff4444',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    // Restart button background
+    const btnBg = this.add.rectangle(width / 2, height / 2 + 40, 220, 60, 0xffffff);
+    btnBg.setInteractive({ useHandCursor: true });
+
+    // Restart button text
+    const btnText = this.add.text(width / 2, height / 2 + 40, 'Restart', {
+      fontSize: '32px',
+      fill: '#000000',
+      fontStyle: 'bold'
+    }).setOrigin(0.5);
+
+    // Hover effect
+    btnBg.on('pointerover', () => btnBg.setFillStyle(0xdddddd));
+    btnBg.on('pointerout',  () => btnBg.setFillStyle(0xffffff));
+
+    // Restart on click — reset globals and restart scene
+    btnBg.on('pointerup', () => {
+      largestPlanet = 1;
+      planetQueue = [];
+      planetsArray = [];
+      isPlanetFalling = true;
+      this.scene.restart();
+    });
+  }
+
   create() {
+    this.isGameOver = false;
     //Border Variables
     //Variables for borders
     const W = this.scale.width;
@@ -326,21 +374,19 @@ class MainScene extends Phaser.Scene {
     planetQueue[0] = this.nextPlanet();
     planetQueue[1] = this.nextPlanet();
     //Show current planet at pointer position
-    this.currentSprite = this.add.sprite(500, this.topY, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
+    this.currentSprite = this.add.sprite(500, this.topY - 50, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
     //print next planet
     this.nextPlanetText = this.add.text(10, 10, nextText, { fontSize: '24px', fill: '#fff' });
     //Sprite for next planet
     this.nextSprite = this.add.sprite((this.nextPlanetText.width / 2) + 10, this.nextPlanetText.height + 32, 'planets', planetQueue[1]).setScale(0.5);
     //Line following mouse to show trajectory
-    this.trajectoryLine = this.add.sprite(0, this.topY, 'border').setScale(0.015, 6);
+    this.trajectoryLine = this.add.sprite(0, this.topY  - 50, 'border').setScale(0.015, 6);
     this.trajectoryLine.setOrigin(0.0, 0)
-
-
-
 
     //First planet is made here, need to show what it is
     //spawn planet at mouse x coordinate
     this.input.on('pointerup', function (pointer) {
+        if (this.isGameOver) return;
         //Cannot spawn if a planet is falling
         if (!isPlanetFalling) return;
         // Spawns the planet using the mouse's X coordinate and a fixed Y coordinate
@@ -366,11 +412,13 @@ class MainScene extends Phaser.Scene {
         if(planetA === planetB) return;
         //Check they are planets
         if (!planetA.isPlanet || !planetB.isPlanet) return;
+        // ── NEW: mark falling planets as landed on any collision ──
+        if (planetA.isPlanet && planetA.isFalling) planetA.isFalling = false;
+        if (planetB.isPlanet && planetB.isFalling) planetB.isFalling = false;
         //Call collide function
         this.collidePlanets(planetA, planetB);
       })
-
-    })
+    });
 
     //Bounds of the world (whole element)
     this.matter.world.setBounds(0, 0, width, height, 10, true, true, true);
@@ -412,9 +460,10 @@ class MainScene extends Phaser.Scene {
         borderColor
     );
     this.matter.add.gameObject(this.rightRect, { isStatic: true });
-  
-  }
-}
+
+  }//Create Close
+  }//Class close
+
 
 export function createGame(parent) {
   const config = {
