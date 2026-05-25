@@ -293,15 +293,31 @@ class MainScene extends Phaser.Scene {
       this.trajectoryLine.setAlpha(1);
     }
 
-    //Check for loss condition - planet goes over the top border
-    for (let planet of planetsArray){
-      if (! planet.body) continue;
-      else{
-        //If y value over the limit - TODO IMPLEMENT LOSING
-        if(planet.y < this.topY + planets_minYValue[planet.frame.name] && !planet.isFalling){
-          this.triggerGameOver();
-        }  
+    //Loss check
+    let anyPlanetOverLine = false;
+    for (let planet of planetsArray) {
+      if (!planet.body) continue;
+      
+      const vx = planet.body.velocity.x;
+      const vy = planet.body.velocity.y;
+      const isSettled = Math.sqrt(vx * vx + vy * vy) < 0.3;
+      
+      if (planet.y < this.topY + planets_minYValue[planet.frame.name] 
+          && !planet.isFalling 
+          && isSettled) {
+        anyPlanetOverLine = true;
+        break;
       }
+    }
+
+    if (anyPlanetOverLine) {
+      if (!this.overLineTimer) {
+        this.overLineTimer = this.time.now;
+      } else if (this.time.now - this.overLineTimer > 3000) {
+        this.triggerGameOver();
+      }
+    } else {
+      this.overLineTimer = null;
     }
   }
 
@@ -346,11 +362,14 @@ class MainScene extends Phaser.Scene {
       planetQueue = [];
       planetsArray = [];
       isPlanetFalling = true;
+      this.overLineTimer = null;
       this.scene.restart();
     });
   }
 
   create() {
+    //Game over vars
+    this.overLineTimer = null;
     this.isGameOver = false;
     //Border Variables
     //Variables for borders
@@ -370,17 +389,35 @@ class MainScene extends Phaser.Scene {
 
     //Background
     this.add.image(500, 500, 'background');
+    // Display planets below the box, centered and scaled to window width
+    const totalPlanets = 12;
+    const bottomY = H - margin / 2;           // centered in the margin below the box
+    const availableWidth = W - margin * 2;    // same width as the play area
+    const spacing = availableWidth / totalPlanets;
+    const iconScale = Math.min(spacing / 128, 0.6); // scale icons to fit, max 0.6
+
+    for (let i = 0; i < totalPlanets; i++) {
+      const x = margin + spacing * i + spacing / 2; // evenly spaced, centered in each slot
+      this.add.sprite(x, bottomY, 'planets', i).setScale(iconScale);
+    }
     //Initialize queue
     planetQueue[0] = this.nextPlanet();
     planetQueue[1] = this.nextPlanet();
     //Show current planet at pointer position
     this.currentSprite = this.add.sprite(500, this.topY - 50, 'planets', planetQueue[0]).setScale(planets_scale[planetQueue[0]], planets_scale[planetQueue[0]]);
     //print next planet
-    this.nextPlanetText = this.add.text(10, 10, nextText, { fontSize: '24px', fill: '#fff' });
-    //Sprite for next planet
-    this.nextSprite = this.add.sprite((this.nextPlanetText.width / 2) + 10, this.nextPlanetText.height + 32, 'planets', planetQueue[1]).setScale(0.5);
+    const uiScale = (W / 800) * 0.85; // scale with window, 15% smaller
+    const fontSize = Math.round(24 * uiScale);
+    this.nextPlanetText = this.add.text(10, 10, nextText, { fontSize: `${fontSize}px`, fill: '#fff' });
+    const nextSpriteScale = 0.5 * uiScale;
+    this.nextSprite = this.add.sprite(
+      (this.nextPlanetText.width / 2) + 10,
+      this.nextPlanetText.height + Math.round(32 * uiScale),
+      'planets',
+      planetQueue[1]
+    ).setScale(nextSpriteScale);
     //Line following mouse to show trajectory
-    this.trajectoryLine = this.add.sprite(0, this.topY  - 50, 'border').setScale(0.015, 6);
+    this.trajectoryLine = this.add.sprite(0, this.topY  - 50, 'border').setScale(0.015, 4.6);
     this.trajectoryLine.setOrigin(0.0, 0)
 
     //First planet is made here, need to show what it is
@@ -409,12 +446,22 @@ class MainScene extends Phaser.Scene {
         //Make sure they exist
         if (!planetA || !planetB) return;
         //Check that it isnt a planet colliding with itself
+
+        // ── NEW: mark falling planets as landed on any collision ──
+        if (planetA && planetA.isPlanet && planetA.isFalling) {
+          if (planetA.y > this.topY + planets_minYValue[planetA.frame.name]) {
+            planetA.isFalling = false;
+          }
+        }
+        if (planetB && planetB.isPlanet && planetB.isFalling) {
+          if (planetB.y > this.topY + planets_minYValue[planetB.frame.name]) {
+            planetB.isFalling = false;
+          }
+        }
+
         if(planetA === planetB) return;
         //Check they are planets
         if (!planetA.isPlanet || !planetB.isPlanet) return;
-        // ── NEW: mark falling planets as landed on any collision ──
-        if (planetA.isPlanet && planetA.isFalling) planetA.isFalling = false;
-        if (planetB.isPlanet && planetB.isFalling) planetB.isFalling = false;
         //Call collide function
         this.collidePlanets(planetA, planetB);
       })
@@ -462,7 +509,7 @@ class MainScene extends Phaser.Scene {
     this.matter.add.gameObject(this.rightRect, { isStatic: true });
 
   }//Create Close
-  }//Class close
+}//Class close
 
 
 export function createGame(parent) {
