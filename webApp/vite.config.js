@@ -5,6 +5,6 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
 	plugins: [sveltekit(), tailwindcss()],
 	server: {
-    allowedHosts: ['.ngrok-free.app'] 
+    allowedHosts: ['.ts.net'] 
   }
 });
