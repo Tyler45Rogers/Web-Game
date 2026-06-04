@@ -12,17 +12,17 @@
 
 <dialog
     open
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 m-0 w-full h-full max-w-full max-h-full"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 m-0 h-full w-full bg-black/50 border-none backdrop:bg-transparent"
     onclick={handleBackdropClick}
     onkeydown={handleKeydown}
     aria-label={title}
 >
-    <div class=" rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-primary rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between p-6 border-b border-gray-200">
             <h2 class="text-2xl font-bold">{title}</h2>
             <button
                 onclick={onclose}
-                class="text-gray-400 hover:text-gray-600 text-3xl leading-none"
+                class="text-white hover:text-gray-600 text-3xl leading-none"
                 aria-label="Close modal"
             >
                 &times;
@@ -34,7 +34,7 @@
         {/if}
 
         <div class="p-6">
-            <p class="text-gray-700 leading-relaxed">{details}</p>
+            <p class="text-white leading-relaxed">{details}</p>
         </div>
     </div>
 </dialog>
