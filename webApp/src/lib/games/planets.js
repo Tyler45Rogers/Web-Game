@@ -518,6 +518,7 @@ export function createGame(parent) {
     width,
     height,
     parent,
+    pixelArt: true,
     physics: {
       default: 'matter',
       matter: {
