@@ -3,6 +3,9 @@ import Phaser from 'phaser';
 export default class PlanetTestScene extends Phaser.Scene {
   constructor() {
     super('PlanetTestScene');
+
+    this.GAME_WIDTH = 900;
+    this.GAME_HEIGHT = 900;
     
     this.canDrop = true;
     this.currentPreview = null;
@@ -10,6 +13,7 @@ export default class PlanetTestScene extends Phaser.Scene {
     this.nextPreviewId = 0;
     
     this.highestUnlockedId = 2;
+    this.minSpawnId = 0;
     this.maxSpawnId = 2;
 
     this.isEduMode = false;
@@ -35,20 +39,34 @@ export default class PlanetTestScene extends Phaser.Scene {
   }
 
   create() {
-    const width = this.scale.width;
-    const height = this.scale.height;
+
+    // --- DYNAMIC CAMERA ZOOM ---
+    const resizeCamera = () => {
+      const screenW = this.scale.gameSize.width;
+      const screenH = this.scale.gameSize.height;
+      
+      // Calculate how much we need to zoom to fit the 800x1000 game on screen
+      const zoom = Math.min(screenW / this.GAME_WIDTH, screenH / this.GAME_HEIGHT);
+      
+      this.cameras.main.setZoom(zoom);
+      this.cameras.main.centerOn(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2);
+    };
+
+    // Run it once on boot, and listen for window resizing (like rotating a phone)
+    this.scale.on('resize', resizeCamera);
+    resizeCamera();
 
     // --- CENTRALIZED BUCKET CONFIGURATION ---
     this.bucket = {
-      innerWidth: 500,  // The exact playable width inside the walls
-      innerHeight: 600, // The exact playable height 
-      bottomOffset: 50, // Distance from the bottom of the screen to the floor
-      wallThickness: 50 // How thick the invisible physics walls are
+      innerWidth: 500,  
+      innerHeight: 600,  
+      bottomOffset: 50, 
+      wallThickness: 50 
     };
 
-    // Calculate absolute coordinates based on the config
-    this.bucket.centerX = width / 2;
-    this.bucket.floorY = height - this.bucket.bottomOffset;
+    // Calculate absolute coordinates based on our VIRTUAL this.GAME_WIDTH/this.GAME_HEIGHT
+    this.bucket.centerX = this.GAME_WIDTH / 2;
+    this.bucket.floorY = this.GAME_HEIGHT - this.bucket.bottomOffset;
     this.bucket.leftX = this.bucket.centerX - (this.bucket.innerWidth / 2);
     this.bucket.rightX = this.bucket.centerX + (this.bucket.innerWidth / 2);
     this.bucket.topY = this.bucket.floorY - this.bucket.innerHeight;
@@ -57,23 +75,21 @@ export default class PlanetTestScene extends Phaser.Scene {
     const bgGraphics = this.add.graphics();
     const topColor = 0x050510; 
     const bottomColor = 0x3b115e; 
-    const splitY = height * 0.66; // The 2/3 mark of the screen
+    const splitY = this.GAME_HEIGHT * 0.66; 
 
-    // 1A. Top 2/3: Solid Dark Space
+    // OVERDRAW the backgrounds so they cover extreme ultrawide monitors and tall phones!
     bgGraphics.fillStyle(topColor, 1);
-    bgGraphics.fillRect(0, 0, width, splitY);
+    bgGraphics.fillRect(-2000, -2000, this.GAME_WIDTH + 4000, splitY + 2000);
 
-    // 1B. Bottom 1/3: Glowing Horizon Gradient
     bgGraphics.fillGradientStyle(topColor, topColor, bottomColor, bottomColor, 1, 1, 1, 1);
-    bgGraphics.fillRect(0, splitY, width, height - splitY);
+    bgGraphics.fillRect(-2000, splitY, this.GAME_WIDTH + 4000, this.GAME_HEIGHT + 2000);
 
-    // 2. Draw the Starfield over everything
-    for (let i = 0; i < 200; i++) {
-      const x = Phaser.Math.Between(0, width);
-      const y = Phaser.Math.Between(0, height);
+    for (let i = 0; i < 300; i++) {
+      // Spread the stars out further too!
+      const x = Phaser.Math.Between(-1000, this.GAME_WIDTH + 1000);
+      const y = Phaser.Math.Between(-1000, this.GAME_HEIGHT + 1000);
       const radius = Phaser.Math.FloatBetween(0.5, 2);
-      
-      const alpha = Phaser.Math.FloatBetween(0.2, y / height + 0.2); 
+      const alpha = Phaser.Math.FloatBetween(0.2, y / this.GAME_HEIGHT + 0.2); 
       
       bgGraphics.fillStyle(0xffffff, alpha);
       bgGraphics.fillCircle(x, y, radius);
@@ -159,7 +175,10 @@ export default class PlanetTestScene extends Phaser.Scene {
     // --- 3. INPUT CONTROLS ---
     this.input.on('pointermove', this.handlePointerMove, this);
     this.input.on('pointerdown', this.handlePointerDown, this);
+    this.input.on('pointerup', this.handlePointerUp, this);
 
+    this.isUIInteraction = false;
+    
     // --- 4. COLLISION LOGIC ---
     this.setupCollisions();
 
@@ -213,7 +232,7 @@ export default class PlanetTestScene extends Phaser.Scene {
 
     // --- 5.7 NEXT PLANET UI ---
     // Draw a faint box in the top right for the next planet
-    const nextBoxX = width - 150;
+    const nextBoxX = this.GAME_WIDTH - 150;
     const nextBoxY = 20;
     
     const uiGraphics = this.add.graphics();
@@ -233,25 +252,26 @@ export default class PlanetTestScene extends Phaser.Scene {
     this.nextPlanetUI.setDepth(100);
 
     // Pre-roll the very first "next" planet so it's ready for spawnNextPreview()
+    const spawnFloor = this.isDevMode ? 0 : this.minSpawnId;
     const spawnCeiling = this.isDevMode ? 11 : this.maxSpawnId;
-    this.nextPreviewId = Phaser.Math.Between(0, spawnCeiling);
+    this.nextPreviewId = Phaser.Math.Between(spawnFloor, spawnCeiling);
 
     // --- 5.7.5 EVOLUTION LEGEND UI ---
-    const legendX = width - 80; // Positioned safely to the right of the bucket
+    const legendX = this.GAME_WIDTH - 80; // Positioned safely to the right of the bucket
     let legendY = 190;           // Starts just below the NEXT box
 
-    this.add.text(legendX - 20, legendY, 'EVOLUTION:', {
-      fontSize: '16px',
+    this.add.text(legendX - 10, legendY, 'EVOLUTION:', {
+      fontSize: '20px',
       fontFamily: '"Courier New", Courier, monospace',
       color: '#aaaaaa',
       fontStyle: 'bold'
     }).setOrigin(0.5).setDepth(100);
 
-    legendY += 30;
+    legendY += 40;
 
     this.celestialData.forEach((planet, index) => {
       // Draw the sprite
-      let legendSprite = this.add.sprite(legendX - 50, legendY + (index * 44), 'planets', planet.id);
+      let legendSprite = this.add.sprite(legendX - 50, legendY + (index * 50), 'planets', planet.id);
       
       // We force all legend sprites to a consistent 32x32 size so massive planets 
       // like the Sun and Black Hole don't overlap the text or UI boundaries!
@@ -259,8 +279,8 @@ export default class PlanetTestScene extends Phaser.Scene {
       legendSprite.setDepth(100);
 
       // Draw the name
-      this.add.text(legendX - 25, legendY + (index * 44), planet.name.toUpperCase(), {
-        fontSize: '14px',
+      this.add.text(legendX - 25, legendY + (index * 50), planet.name.toUpperCase(), {
+        fontSize: '18px',
         fontFamily: '"Courier New", Courier, monospace',
         color: '#ffffff'
       }).setOrigin(0, 0.5).setDepth(100);
@@ -281,24 +301,24 @@ export default class PlanetTestScene extends Phaser.Scene {
     this.settingsContainer = this.add.container(0, 0).setDepth(200);
     this.settingsContainer.setVisible(this.isSettingsOpen); // Hidden by default
 
-    // 3. Dark Overlay (Acts as a click-shield!)
-    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85);
-    overlay.setInteractive(); // Giving it interactivity absorbs background clicks
+    // 3. Dark Overlay (Expanded to 4000x4000 to cover zoomed-out screens!)
+    const overlay = this.add.rectangle(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2, 4000, 4000, 0x000000, 0.85);
+    overlay.setInteractive(); 
 
-    // 4. Settings Panel Background (Made taller: 360px)
-    const panel = this.add.rectangle(width / 2, height / 2, 400, 360, 0x050510, 1);
+    // 4. Settings Panel Background
+    const panel = this.add.rectangle(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2, 400, 360, 0x050510, 1);
     panel.setStrokeStyle(4, 0x00ffff);
 
-    // 5. Menu Title (Shifted to Y - 130)
-    const settingsTitle = this.add.text(width / 2, height / 2 - 130, 'SYSTEM SETTINGS', {
+    // 5. Menu Title
+    const settingsTitle = this.add.text(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2 - 130, 'SYSTEM SETTINGS', {
       fontSize: '32px',
       fontFamily: '"Courier New", Courier, monospace',
       color: '#ffffff',
       shadow: { fill: true, blur: 10, color: '#00ffff', offsetY: 0, offsetX: 0 }
     }).setOrigin(0.5);
 
-    // 6. The EDU Toggle (Shifted to Y - 60)
-    this.eduToggle = this.add.text(width / 2, height / 2 - 60, this.isEduMode ? '[X] EDU MODE' : '[ ] EDU MODE', {
+    // 6. The EDU Toggle 
+    this.eduToggle = this.add.text(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2 - 60, this.isEduMode ? '[X] EDU MODE' : '[ ] EDU MODE', {
       fontSize: '24px',
       fontFamily: '"Courier New", Courier, monospace',
       color: this.isEduMode ? '#00ff00' : '#aaaaaa'
@@ -308,13 +328,13 @@ export default class PlanetTestScene extends Phaser.Scene {
       this.scene.restart({ 
         isEduMode: !this.isEduMode,        
         particlesEnabled: this.particlesEnabled, 
-        isDevMode: this.isDevMode, // --- NEW ---
+        isDevMode: this.isDevMode, 
         keepSettingsOpen: true 
       }); 
     });
 
-    // 6.5 The PARTICLES Toggle (Shifted to Y - 10)
-    this.particleToggle = this.add.text(width / 2, height / 2 - 10, this.particlesEnabled ? '[X] PARTICLES' : '[ ] PARTICLES', {
+    // 6.5 The PARTICLES Toggle
+    this.particleToggle = this.add.text(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2 - 10, this.particlesEnabled ? '[X] PARTICLES' : '[ ] PARTICLES', {
       fontSize: '24px',
       fontFamily: '"Courier New", Courier, monospace',
       color: this.particlesEnabled ? '#00ff00' : '#aaaaaa'
@@ -324,13 +344,13 @@ export default class PlanetTestScene extends Phaser.Scene {
       this.scene.restart({ 
         isEduMode: this.isEduMode,              
         particlesEnabled: !this.particlesEnabled, 
-        isDevMode: this.isDevMode, // --- NEW ---
+        isDevMode: this.isDevMode, 
         keepSettingsOpen: true 
       }); 
     });
 
-    // --- NEW: 6.6 The DEV MODE Toggle (Positioned at Y + 40) ---
-    this.devToggle = this.add.text(width / 2, height / 2 + 40, this.isDevMode ? '[X] DEV MODE' : '[ ] DEV MODE', {
+    // 6.6 The DEV MODE Toggle
+    this.devToggle = this.add.text(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2 + 40, this.isDevMode ? '[X] DEV MODE' : '[ ] DEV MODE', {
       fontSize: '24px',
       fontFamily: '"Courier New", Courier, monospace',
       color: this.isDevMode ? '#00ff00' : '#aaaaaa'
@@ -340,13 +360,13 @@ export default class PlanetTestScene extends Phaser.Scene {
       this.scene.restart({ 
         isEduMode: this.isEduMode,              
         particlesEnabled: this.particlesEnabled, 
-        isDevMode: !this.isDevMode, // --- Flip this one ---
+        isDevMode: !this.isDevMode, 
         keepSettingsOpen: true 
       }); 
     });
 
-    // 7. Close Menu Button (Shifted to Y + 120)
-    const closeBtn = this.add.text(width / 2, height / 2 + 120, '> RESUME', {
+    // 7. Close Menu Button
+    const closeBtn = this.add.text(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2 + 120, '> RESUME', {
       fontSize: '24px',
       fontFamily: '"Courier New", Courier, monospace',
       color: '#00ffff'
@@ -384,7 +404,7 @@ export default class PlanetTestScene extends Phaser.Scene {
     
     // 2. Roll a new planet to replace it in the "Next" box
     const spawnCeiling = this.isDevMode ? 11 : this.maxSpawnId;
-    this.nextPreviewId = Phaser.Math.Between(0, spawnCeiling);
+    this.nextPreviewId = Phaser.Math.Between(this.minSpawnId, spawnCeiling);
 
     // 3. Update the UI sprite to show the new next planet
     const nextData = this.celestialData[this.nextPreviewId];
@@ -396,7 +416,7 @@ export default class PlanetTestScene extends Phaser.Scene {
 
     // 4. Setup the actual draggable preview for the player (Your existing code)
     const currentData = this.celestialData[this.currentPreviewId];
-    this.currentPreview = this.add.sprite(this.scale.width / 2, 100, 'planets', this.currentPreviewId);
+    this.currentPreview = this.add.sprite(this.GAME_WIDTH / 2, 185, 'planets', this.currentPreviewId);
     
     const originY = currentData.originY || 0.5;
     this.currentPreview.setOrigin(0.5, originY);
@@ -417,9 +437,9 @@ export default class PlanetTestScene extends Phaser.Scene {
 
       // Pull exact boundaries from the config
       const clampedX = Phaser.Math.Clamp(
-        pointer.x, 
-        this.bucket.leftX + visualRadius - 10, 
-        this.bucket.rightX - visualRadius + 10
+        pointer.worldX, 
+        this.bucket.leftX + visualRadius - 5, 
+        this.bucket.rightX - visualRadius + 5
       );
       
       this.currentPreview.x = clampedX;
@@ -429,8 +449,26 @@ export default class PlanetTestScene extends Phaser.Scene {
   handlePointerDown(pointer, currentlyOver) {
     if (this.isSettingsOpen) return;
 
+    // If the user taps a UI button (like Settings or Next), flag it and abort!
     if (currentlyOver && currentlyOver.length > 0) {
+      this.isUIInteraction = true;
       return; 
+    }
+
+    this.isUIInteraction = false;
+
+    // Immediately snap the preview planet to the finger's location 
+    // by triggering the move logic manually on the first tap.
+    this.handlePointerMove(pointer);
+  }
+
+  handlePointerUp(pointer) {
+    if (this.isSettingsOpen) return;
+
+    // If the touch started on a UI button, reset the flag and abort the drop
+    if (this.isUIInteraction) {
+      this.isUIInteraction = false;
+      return;
     }
 
     if (!this.isGameOver && this.canDrop && this.currentPreview) {
@@ -599,7 +637,8 @@ export default class PlanetTestScene extends Phaser.Scene {
                 // --- PROGRESSION CHECK (Ignored for Black Holes) ---
                 if (nextId > this.highestUnlockedId && nextId <= 11) {
                   this.highestUnlockedId = nextId;
-                  this.maxSpawnId = Math.min(4, Math.max(2, this.highestUnlockedId - 2));
+                  this.maxSpawnId = Math.min(8, Math.max(2, this.highestUnlockedId - 4));
+                  this.minSpawnId = Math.max(0, this.maxSpawnId - 5);
                 }
 
                 // --- SPAWN OR ANNIHILATE ---
@@ -678,20 +717,16 @@ export default class PlanetTestScene extends Phaser.Scene {
       this.currentPreview = null;
     }
     
-    // --- NEW: Hide the next planet UI ---
     if (this.nextPlanetUI) {
       this.nextPlanetUI.setVisible(false);
     }
 
-    const width = this.scale.width;
-    const height = this.scale.height;
-
-    // Darken the screen with a semi-transparent black overlay
-    const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000212, 0.85);
+    // Darken the screen with a massive overlay (4000x4000)
+    const overlay = this.add.rectangle(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2, 4000, 4000, 0x000212, 0.85);
     overlay.setDepth(100);
 
     // Terminal Style Game Over Text
-    this.add.text(width / 2, height / 2 - 50, 'CONTAINMENT BREACH', {
+    this.add.text(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2 - 50, 'CONTAINMENT BREACH', {
       fontSize: '48px',
       fontFamily: '"Courier New", Courier, monospace',
       fontStyle: 'bold',
@@ -700,7 +735,7 @@ export default class PlanetTestScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(101);
 
     // Sci-Fi Restart Button
-    const restartBtn = this.add.text(width / 2, height / 2 + 50, '> INITIALIZE RESTART', {
+    const restartBtn = this.add.text(this.GAME_WIDTH / 2, this.GAME_HEIGHT / 2 + 50, '> INITIALIZE RESTART', {
       fontSize: '24px',
       fontFamily: '"Courier New", Courier, monospace',
       color: '#00ffff',
@@ -716,7 +751,7 @@ export default class PlanetTestScene extends Phaser.Scene {
       restartBtn.setColor('#00ffff');
       restartBtn.setShadow(0, 0, '#00ffff', 10, true, true);
     });
-    restartBtn.on('pointerdown', () => {
+    restartBtn.on('pointerup', () => {
       this.scene.restart({
         isEduMode: this.isEduMode,
         particlesEnabled: this.particlesEnabled,
