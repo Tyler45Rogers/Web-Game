@@ -6,17 +6,19 @@
 <section>
 
     <div class="flex flex-col justify-items-center mx-auto">
-        <p class="text-5xl font-bold mt-20"> Projects </p>
-    </div>
+        <p class="text-5xl font-bold mt-10 text-center"> Projects </p>
+    
 
-    <div class = "flex flex-grid justify-items-center mx-auto mb-10 mt-10 gap-10">
-        {#each projects as project}
-        <ProjectCard
-            title={project.title}
-            description={project.description}
-            details={project.details}
-            screenshot={project.screenshot}
-        />
-        {/each}
+        <div class = "grid grid-cols-3 justify-items-center mx-auto mb-10 mt-10 gap-10">
+            {#each projects as project}
+            <ProjectCard
+                title={project.title}
+                description={project.description}
+                details={project.details}
+                screenshot={project.screenshot}
+            />
+            {/each}
+        </div>
+
     </div>
 </section>

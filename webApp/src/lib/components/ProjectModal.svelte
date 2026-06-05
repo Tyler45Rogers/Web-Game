@@ -22,7 +22,7 @@
             <h2 class="text-2xl font-bold">{title}</h2>
             <button
                 onclick={onclose}
-                class="text-white hover:text-gray-600 text-3xl leading-none"
+                class="hover: text-3xl leading-none"
                 aria-label="Close modal"
             >
                 &times;
@@ -34,7 +34,7 @@
         {/if}
 
         <div class="p-6">
-            <p class="text-white leading-relaxed">{details}</p>
+            <p class="leading-relaxed">{details}</p>
         </div>
     </div>
 </dialog>

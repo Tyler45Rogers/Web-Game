@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @plugin "daisyui" {
-  themes: dark --default, nord;
+  themes: black, wireframe;
+  defaultTheme: black;
 }
 
 /* Global styles */
