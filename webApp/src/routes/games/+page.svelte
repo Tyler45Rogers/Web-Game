@@ -21,7 +21,6 @@
       physics: {
         default: 'matter',
         matter: {
-          enableSleeping: true,
           gravity: { y: 0.6 },
           debug: false 
         }

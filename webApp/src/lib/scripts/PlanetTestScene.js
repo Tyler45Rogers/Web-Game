@@ -646,18 +646,81 @@ export default class PlanetTestScene extends Phaser.Scene {
                   // Standard spawn for all standard planets
                   const newPlanet = this.spawnPhysicsPlanet(midX, midY, nextId);
                   
-                  newPlanet.setTintFill(0x00ffff);
+                  newPlanet.setTint(0x00ffff).setTintMode(Phaser.TintModes.FILL);
                   this.time.delayedCall(100, () => {
                     if (newPlanet && newPlanet.active) {
                       newPlanet.clearTint();
                     }
                   });
                 } else {
-                  // BLACK HOLE ANNIHILATION EVENT
-                  this.cameras.main.shake(400, 0.025);
+                  // ==========================================
+                  // BLACK HOLE ANNIHILATION EVENT (TRUE SPIRAL)
+                  // ==========================================
+                  
+                  this.cameras.main.shake(3000, 0.01); 
                   if (this.particlesEnabled) {
-                    this.dustEmitter.explode(150, midX, midY);
+                    this.dustEmitter.explode(500, midX, midY);
                   }
+
+                  const superBlackHole = this.add.sprite(midX, midY, 'planets', 11);
+                  superBlackHole.setScale(4.5);
+                  superBlackHole.setDepth(10);
+
+                  const allPlanets = this.children.list.filter(child => child.body && child.body.isPlanet);
+                  
+                  allPlanets.forEach(planetSprite => {
+                    // 1. MAKE IT A GHOST (Halt Physics Engine & Untag)
+                    if (planetSprite.body) {
+                      planetSprite.setIgnoreGravity(true); 
+                      planetSprite.setCollidesWith(0);     
+                      planetSprite.setVelocity(0, 0);      
+                      planetSprite.setAngularVelocity(0);  
+                      planetSprite.body.isPlanet = false; 
+                    }
+
+                    // 2. CALCULATE STARTING POLAR COORDINATES
+                    planetSprite.vortexRadius = Phaser.Math.Distance.Between(midX, midY, planetSprite.x, planetSprite.y);
+                    planetSprite.vortexAngle = Phaser.Math.Angle.Between(midX, midY, planetSprite.x, planetSprite.y);
+
+                    // Randomize the number of orbits (between 3 and 6 full spins)
+                    const randomSpins = Math.PI * Phaser.Math.FloatBetween(4, 8);
+                    
+                    // Delay the suck based on distance (closer planets get pulled first). 
+                    // We cap the delay at 350ms so everything still dies before the 1000ms detonation!
+                    const suckDelay = Math.min(350, planetSprite.vortexRadius);
+
+                    // 3. THE POLAR MATH TWEEN
+                    this.tweens.add({
+                      targets: planetSprite,
+                      vortexRadius: 0, 
+                      vortexAngle: planetSprite.vortexAngle + randomSpins, 
+                      scaleX: 0,
+                      scaleY: 0,
+                      delay: suckDelay,
+                      duration: 3000 - suckDelay,
+                      ease: 'Cubic.in', 
+                      onUpdate: () => {
+                        planetSprite.x = midX + Math.cos(planetSprite.vortexAngle) * planetSprite.vortexRadius;
+                        planetSprite.y = midY + Math.sin(planetSprite.vortexAngle) * planetSprite.vortexRadius;
+                        planetSprite.rotation += 0.01;
+                      },
+                      onComplete: () => {
+                        if (this.particlesEnabled) {
+                          this.dustEmitter.explode(6, midX, midY);
+                        }
+                        planetSprite.destroy();
+                      }
+                    });
+                  });
+                  this.time.delayedCall(3500, () => {
+                    this.cameras.main.shake(800, 0.06); // A massive, violent screen shake
+                    
+                    if (this.particlesEnabled) {
+                      this.dustEmitter.explode(500, midX, midY); // A blinding flash of particles
+                    }
+                    
+                    superBlackHole.destroy(); // Wipe the supermassive black hole from existence
+                  });
                 }
               }
             }
