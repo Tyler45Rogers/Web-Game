@@ -6,7 +6,7 @@
     let currentTheme = $state('dark'); // ✅ IMPORTANT
 
     onMount(() => {
-        currentTheme = localStorage.getItem('theme') || 'black';
+        currentTheme = localStorage.getItem('theme') || 'dark';
     });
 
     $effect(() => {
@@ -14,13 +14,13 @@
     });
 
     const switchTheme = () => {
-        currentTheme = currentTheme === 'black' ? 'wireframe' : 'black';
+        currentTheme = currentTheme === 'dark' ? 'nord' : 'dark';
         localStorage.setItem('theme', currentTheme);
     };
 </script>
 
 <button onclick={switchTheme} class="btn btn-soft bg-transparent border-none hover:bg-base-200/30">
-    {#if currentTheme === 'black'}
+    {#if currentTheme === 'dark'}
         <Sun />
     {:else}
         <Moon />
