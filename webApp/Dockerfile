@@ -5,7 +5,8 @@ WORKDIR /app
 
 # install deps (including dev for build)
 COPY package*.json ./
-RUN npm install
+RUN npm install --ignore-scripts
+RUN npm rebuild
 
 # copy sources and build
 COPY . .
