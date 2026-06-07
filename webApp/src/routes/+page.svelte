@@ -9,7 +9,7 @@
         <p class="text-5xl font-bold mt-10 text-center"> Projects </p>
     
 
-        <div class = "grid grid-cols-3 justify-items-center mx-auto mb-10 mt-10 gap-10">
+        <div class = "grid md:grid-cols-3 sm:grid-cols-1 justify-items-center mx-auto mb-10 mt-10 gap-10">
             {#each projects as project}
             <ProjectCard
                 title={project.title}

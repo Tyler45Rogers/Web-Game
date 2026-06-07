@@ -1,30 +1,57 @@
 <script>
-    import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
-    
+  import ThemeSwitcher from '$lib/components/ThemeSwitcher.svelte';
+  import House from '@lucide/svelte/icons/house';
+  import Gamepad from '@lucide/svelte/icons/gamepad-directional';
+  let open = $state(false);
 </script>
 
-<nav class="w-full border-b-2 border-gray-300 justify-items-center">
+<!-- Larger Screens -->
+<nav class="hidden md:block w-full border-b-2 border-gray-300">
+  <div class="flex flex-row justify-between items-center px-10 py-4">
+    <!-- Left: Home Icon -->
+    <a href="/" class="btn btn-ghost p-2">
+        <House size={28} />
+    </a>
 
-    <div class ="flex flex-row justify-around justify-items-center content-center mt-5 mb-5">
+    <!-- Center -->
+    <a class="btn btn-ghost p-2" href="/games">
+        <Gamepad size={28} />
+        Games
+    </a>
 
-        <!-- Left -->
-        <div class="flex items-center justify-left ml-20">
-            <a class="btn btn-primary border-2 border-gray-300 font-bold text-2xl rounded-full" href="/">Home</a>
-        </div>
-        
-
-        <!-- Center -->
-        <div class="flex flex-row justify-center items-center mr-20">
-            <a class="btn btn-primary border-2 border-gray-300 font-bold text-2xl rounded-full" href="/games">Games</a>
-        </div>
-
-        <!-- Right -->
-        <div class="sm:mr-2 md:mr-5">
-            <ThemeSwitcher />
-        </div>
-
-    </div>
-    
+    <!-- Right -->
+    <ThemeSwitcher />
+  </div>
 </nav>
 
+<!-- Smaller Screens -->
+<nav class="block md:hidden w-full border-b-2 border-gray-300 relative">
+  <div class="flex flex-row justify-between items-center px-4 py-3">
+    <!-- Left: Home Icon -->
+    <a href="/" class="btn btn-ghost p-2">
+        <House size={28} />
+    </a>
 
+    <!-- Right: Theme + Hamburger -->
+    <div class="flex items-center gap-2">
+      <ThemeSwitcher />
+      <button onclick={() => open = !open} class="btn btn-ghost text-2xl p-2">
+        {open ? '✕' : '☰'}
+      </button>
+    </div>
+  </div>
+
+  <!-- Dropdown: opens from right -->
+  {#if open}
+    <div class="absolute right-0 top-full mt-1 w-48 bg-base-100 border border-gray-300 rounded-lg shadow-lg z-50 flex flex-col p-2 gap-2">
+        <a href="/" class="btn btn-ghost p-2">
+            <House size={28} />
+            Home
+        </a>
+      <a class="btn btn-ghost p-2" href="/games">
+        <Gamepad size={28} />
+        Games
+      </a>
+    </div>
+  {/if}
+</nav>
