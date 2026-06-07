@@ -1,8 +1,5 @@
 import Phaser from 'phaser';
 
-const width = 800;
-const height = 800;
-
 //Planets setup
 const planets = {
   0: "pluto",
@@ -468,7 +465,7 @@ class MainScene extends Phaser.Scene {
     });
 
     //Bounds of the world (whole element)
-    this.matter.world.setBounds(0, 0, width, height, 10, true, true, true);
+    this.matter.world.setBounds(0, 0, this.scale.width, this.scale.height, 10, true, true, true);
     //Gravity
     this.matter.world.setGravity(0, 1, 0.001);
     //Graphics object
@@ -512,18 +509,21 @@ class MainScene extends Phaser.Scene {
 }//Class close
 
 
-export function createGame(parent) {
+
+export function createGame(parent, size = 800) {
   const config = {
     type: Phaser.AUTO,
-    width,
-    height,
+    width: size,
+    height: size,
     parent,
     pixelArt: true,
+    scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
     physics: {
       default: 'matter',
-      matter: {
-        debug: false
-      }
+      matter: { debug: false }
     },
     scene: [MainScene]
   };
