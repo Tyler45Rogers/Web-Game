@@ -1,0 +1,43 @@
+node_modules
+dist
+build
+.vscode
+.git
+.gitignore
+.env
+npm-debug.log
+yarn.lock
+package-lock.json
+/.DS_Store
+coverage
+.cache
+publicnode_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+*.md
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+
