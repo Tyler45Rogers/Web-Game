@@ -5,8 +5,16 @@
   let gameContainer;
   let game;
 
+  function getSize() {
+    const min = 300;
+    const max = 800;
+    const size = window.screen.width - 32; // screen.width never changes on zoom
+    return Math.max(min, Math.min(size, max));
+  }
+
   onMount(() => {
-    game = createGame(gameContainer);
+    const size = getSize();
+    game = createGame(gameContainer, size);
   });
 
   onDestroy(() => {
@@ -14,12 +22,8 @@
   });
 </script>
 
-<section class="flex flex-col items-center w-full h-full mb-10">
+<section class="flex flex-col items-center w-full h-full">
   <p class="text-5xl font-bold mt-20">Games</p>
   <p class="text-3xl font-bold mt-10 mb-6">Planets</p>
-
-  <!-- Wrapper handles the scaling -->
-  <div class="scale-[0.6] lg:scale-100 origin-top mb-[-320px] lg:mb-0">
-    <div bind:this={gameContainer}></div>
-  </div>
+  <div bind:this={gameContainer}></div>
 </section>
