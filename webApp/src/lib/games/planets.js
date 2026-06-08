@@ -81,9 +81,9 @@ class MainScene extends Phaser.Scene {
       const Bodies = Phaser.Physics.Matter.Matter.Bodies;
       const Body = Phaser.Physics.Matter.Matter.Body;
 
-      const innerCircle = Bodies.circle(0, 0, 70,   { label: 'saturn-body' });
-      const leftRing    = Bodies.circle(-90, 0, 30,  { label: 'saturn-ring' });
-      const rightRing   = Bodies.circle( 90, 0, 30,  { label: 'saturn-ring' });
+      const innerCircle = Bodies.circle(0, 0, 70 * sf,   { label: 'saturn-body' });
+      const leftRing    = Bodies.circle(-90 * sf, 0, 30 * sf,  { label: 'saturn-ring' });
+      const rightRing   = Bodies.circle( 90 * sf, 0, 30 * sf,  { label: 'saturn-ring' });
 
       const compoundBody = Body.create({ parts: [innerCircle, leftRing, rightRing] });
       sprite.setExistingBody(compoundBody);
@@ -97,9 +97,9 @@ class MainScene extends Phaser.Scene {
       const Bodies = Phaser.Physics.Matter.Matter.Bodies;
       const Body = Phaser.Physics.Matter.Matter.Body;
 
-      const innerCircle = Bodies.circle(0, 0, 128,   { label: 'blackhole-body' });
-      const leftRing    = Bodies.circle(-160, 0, 30, { label: 'blackhole-ring' });
-      const rightRing   = Bodies.circle( 160, 0, 30, { label: 'blackhole-ring' });
+      const innerCircle = Bodies.circle(0, 0, 128 * sf,   { label: 'blackhole-body' });
+      const leftRing    = Bodies.circle(-160 * sf, 0, 30 * sf, { label: 'blackhole-ring' });
+      const rightRing   = Bodies.circle( 160 * sf, 0, 30 * sf, { label: 'blackhole-ring' });
 
       const compoundBody = Body.create({ parts: [innerCircle, leftRing, rightRing] });
       sprite.setExistingBody(compoundBody);
@@ -136,9 +136,9 @@ class MainScene extends Phaser.Scene {
       const Bodies = Phaser.Physics.Matter.Matter.Bodies;
       const Body = Phaser.Physics.Matter.Matter.Body;
 
-      const innerCircle = Bodies.circle(0, 0, 70,   { label: 'saturn-body' });
-      const leftRing    = Bodies.circle(-90, 0, 30,  { label: 'saturn-ring' });
-      const rightRing   = Bodies.circle( 90, 0, 30,  { label: 'saturn-ring' });
+      const innerCircle = Bodies.circle(0, 0, 70 * sf,   { label: 'saturn-body' });
+      const leftRing    = Bodies.circle(-90 * sf, 0, 30 * sf,  { label: 'saturn-ring' });
+      const rightRing   = Bodies.circle( 90 * sf, 0, 30 * sf,  { label: 'saturn-ring' });
 
       const compoundBody = Body.create({ parts: [innerCircle, leftRing, rightRing] });
       sprite.setExistingBody(compoundBody);
@@ -152,9 +152,9 @@ class MainScene extends Phaser.Scene {
       const Bodies = Phaser.Physics.Matter.Matter.Bodies;
       const Body = Phaser.Physics.Matter.Matter.Body;
 
-      const innerCircle = Bodies.circle(0, 0, 128,   { label: 'blackhole-body' });
-      const leftRing    = Bodies.circle(-160, 0, 30, { label: 'blackhole-ring' });
-      const rightRing   = Bodies.circle( 160, 0, 30, { label: 'blackhole-ring' });
+      const innerCircle = Bodies.circle(0, 0, 128 * sf,   { label: 'blackhole-body' });
+      const leftRing    = Bodies.circle(-160 * sf, 0, 30 * sf, { label: 'blackhole-ring' });
+      const rightRing   = Bodies.circle( 160 * sf, 0, 30 * sf, { label: 'blackhole-ring' });
 
       const compoundBody = Body.create({ parts: [innerCircle, leftRing, rightRing] });
       sprite.setExistingBody(compoundBody);
