@@ -5,7 +5,7 @@
     let viewProject = $state(false);
 </script>
 
-<div class="bg-neutral-primary-soft block max-w-sm p-6 border border-default rounded-base shadow-xs">
+<div class="bg-neutral-primary-soft block w-3/4 p-6 border border-default rounded-base shadow-xs">
     <h5 class="mb-3 text-2xl font-semibold tracking-tight text-heading leading-8">{title}</h5>
     <p class="text-body mb-6">{description}</p>
     <button
