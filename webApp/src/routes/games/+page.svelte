@@ -8,7 +8,7 @@
   function getSize() {
     const min = 300;
     const max = 800;
-    const size = window.screen.width - 32; // screen.width never changes on zoom
+    const size = window.screen.width - 128; // screen.width never changes on zoom
     return Math.max(min, Math.min(size, max));
   }
 
@@ -22,7 +22,7 @@
   });
 </script>
 
-<section class="flex flex-col items-center w-full h-full">
+<section class="flex flex-col items-center w-full h-full mb-20">
   <p class="text-5xl font-bold mt-20">Games</p>
   <p class="text-3xl font-bold mt-10 mb-6">Planets</p>
   <div bind:this={gameContainer}></div>

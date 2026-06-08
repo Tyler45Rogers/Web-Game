@@ -113,6 +113,7 @@ class MainScene extends Phaser.Scene {
     }
 
     sprite.isPlanet = true;
+    sprite.setData('spawnTime', this.time.now);
     sprite.isFalling = true;
 
     if (largestPlanet < planet) {
@@ -168,6 +169,7 @@ class MainScene extends Phaser.Scene {
     }
 
     sprite.isPlanet = true;
+    sprite.setData('spawnTime', this.time.now);
     sprite.isFalling = true;
 
     if (largestPlanet < planetQueue[0]) {
@@ -199,15 +201,19 @@ class MainScene extends Phaser.Scene {
     if (planetA.frame.name !== planetB.frame.name) return;
 
     const newPlanetIndex = parseInt(planetA.frame.name) + 1;
-    const x = (planetA.x + planetB.x) / 2;
-    const y = (planetA.y + planetB.y) / 2;
+    let x = (planetA.x + planetB.x) / 2;
+    let y = (planetA.y + planetB.y) / 2;
 
     planetA.destroy();
     planetB.destroy();
 
-    // Defer by one frame so destroyed bodies are fully cleaned up
-    if (planetA.frame.name != 11) {
+    if (parseInt(planetA.frame.name) != 11) {
       this.time.delayedCall(0, () => {
+        // Clamp spawn position so the new planet stays inside the borders
+        const radius = 64 * planets_scale[newPlanetIndex] * this.sf;
+        x = Math.max(this.clampMin + radius, Math.min(this.clampMax - radius, x));
+        y = Math.max(this.topY + radius, Math.min(this.scale.height - 128 * this.sf - radius, y));
+
         planetsArray.push(
           this.makePlanet(newPlanetIndex, planets_scale[newPlanetIndex] * this.sf, x, y)
         );
@@ -216,35 +222,38 @@ class MainScene extends Phaser.Scene {
   }
 
   update() {
-    if (this.isGameOver) return;
+    if (this.isGameOver) {
+      this.trajectoryLine.setAlpha(0);
+      return;
+    }
 
     this.trajectoryLine.x = this.clamp(this.input.activePointer.x);
     this.currentSprite.x  = this.clamp(this.input.activePointer.x);
 
+    isPlanetFalling = true;
+
     for (let planet of planetsArray) {
       if (!planet.body) continue;
-      let speed = Math.abs(planet.body.velocity.y);
-      if (speed > 0.5) isPlanetFalling = false;
-      else isPlanetFalling = true;
-    }
-
-    if (!isPlanetFalling) {
-      this.trajectoryLine.setAlpha(0);
-    } else {
-      this.trajectoryLine.setAlpha(1);
-    }
-
-    let anyPlanetOverLine = false;
-    for (let planet of planetsArray) {
-      if (!planet.body) continue;
-
       const vx = planet.body.velocity.x;
       const vy = planet.body.velocity.y;
-      const isSettled = Math.sqrt(vx * vx + vy * vy) < 0.3;
+      if (Math.sqrt(vx * vx + vy * vy) > 0.5) {
+        isPlanetFalling = false;
+        break;
+      }
+    }
 
-      if (planet.y < this.topY + planets_minYValue[planet.frame.name] * this.sf
-          && !planet.isFalling
-          && isSettled) {
+    this.trajectoryLine.setAlpha(isPlanetFalling ? 1 : 0);
+
+    let anyPlanetOverLine = false;
+
+    for (let planet of planetsArray) {
+      if (!planet.body) continue;
+
+      const timeAlive = this.time.now - planet.getData('spawnTime');
+      if (timeAlive < 2000) continue;
+
+      const bounds = planet.body.bounds;
+      if (bounds.max.y < this.topY) {
         anyPlanetOverLine = true;
         break;
       }
@@ -253,12 +262,18 @@ class MainScene extends Phaser.Scene {
     if (anyPlanetOverLine) {
       if (!this.overLineTimer) {
         this.overLineTimer = this.time.now;
-      } else if (this.time.now - this.overLineTimer > 3000) {
-        this.triggerGameOver();
       }
     } else {
-      this.overLineTimer = null;
+      if (!this.overLineTimer || this.time.now - this.overLineTimer >= 200) {
+        this.overLineTimer = null;
+      }
     }
+
+    if (this.overLineTimer && this.time.now - this.overLineTimer > 3000) {
+      this.triggerGameOver();
+    }
+
+    planetsArray = planetsArray.filter(p => p.active);
   }
 
   triggerGameOver() {
@@ -315,7 +330,7 @@ class MainScene extends Phaser.Scene {
     const W      = this.scale.width;
     const H      = this.scale.height;
     const margin = 128 * sf;
-    const thick  = 12  * sf;
+    const thick  = 30  * sf;
 
     this.topY = H * 0.15;
     const innerTop    = this.topY;
@@ -405,7 +420,7 @@ class MainScene extends Phaser.Scene {
       });
     });
 
-    this.matter.world.setBounds(0, 0, W, H, 10, true, true, true);
+    //this.matter.world.setBounds(0, 0, W, H, 10, true, true, true);
     this.matter.world.setGravity(0, 1, 0.001);
 
     // Borders
