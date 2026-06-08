@@ -199,15 +199,19 @@ class MainScene extends Phaser.Scene {
     if (planetA.frame.name !== planetB.frame.name) return;
 
     const newPlanetIndex = parseInt(planetA.frame.name) + 1;
-    const x = (planetA.x + planetB.x) / 2;
-    const y = (planetA.y + planetB.y) / 2;
+    let x = (planetA.x + planetB.x) / 2;
+    let y = (planetA.y + planetB.y) / 2;
 
     planetA.destroy();
     planetB.destroy();
 
-    // Defer by one frame so destroyed bodies are fully cleaned up
-    if (planetA.frame.name != 11) {
+    if (parseInt(planetA.frame.name) != 11) {
       this.time.delayedCall(0, () => {
+        // Clamp spawn position so the new planet stays inside the borders
+        const radius = 64 * planets_scale[newPlanetIndex] * this.sf;
+        x = Math.max(this.clampMin + radius, Math.min(this.clampMax - radius, x));
+        y = Math.max(this.topY + radius, Math.min(this.scale.height - 128 * this.sf - radius, y));
+
         planetsArray.push(
           this.makePlanet(newPlanetIndex, planets_scale[newPlanetIndex] * this.sf, x, y)
         );
