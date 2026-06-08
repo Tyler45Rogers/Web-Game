@@ -6,7 +6,7 @@
 
 
 <!--Who Am I-->
-<section class="mt-10">
+<section class="mt-10 w-4/5">
 <div class="flex flex-col mx-auto gap-10">
     <p class="text-5xl md:text-9xl font-bold text-left justify-start animate-pulse bg-gradient-to-r from-blue-500 to-purple-500 bg-clip-text text-transparent pb-8"> Tyler Rogers </p>
     <div class="flex flex-row justify-end">
