@@ -23,6 +23,6 @@
             title: 'VR Web Gallery (Capstone Project)',
             description: 'A virtual art gallery that can be accessed through VR. Built using SvelteKit, Tailwind CSS, Unity, WebXR, Docker, and Postgres.',
             details: 'This was a year long capstone project with 15 other students where we created an art gallery in VR. Along with the gallery we built a website where users can search through the different art pieces as well. My contribution to this project was implementing the admin page on our website to allow CRUD operations on our databse with the use of JSON Web Tokens for authentication.',
-            screenshot: 'projectScreenshots/capstone.png'
+            screenshot: 'projectScreenshots/capstoneAdd.png'
         }
     ];
