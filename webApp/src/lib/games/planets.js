@@ -258,6 +258,16 @@ class MainScene extends Phaser.Scene {
       }
     }
 
+    // Check if any planet has fallen out of bounds (below the bottom wall)
+    const bottomBoundary = this.scale.height - 128 * this.sf + 60 * this.sf;
+    for (let planet of planetsArray) {
+      if (!planet.body || !planet.active) continue;
+      if (planet.y > bottomBoundary) {
+        this.triggerGameOver();
+        return;
+      }
+    }
+
     if (anyPlanetOverLine) {
       if (!this.overLineTimer) {
         this.overLineTimer = this.time.now;
