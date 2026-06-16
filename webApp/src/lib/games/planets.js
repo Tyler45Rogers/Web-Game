@@ -17,33 +17,32 @@ const planets = {
 };
 
 const planets_scale = {
-  0: 0.25,   // pluto
-  1: 0.35,   // moon
-  2: 0.45,   // mercury
-  3: 0.55,   // mars
-  4: 0.65,   // venus
-  5: 0.70,   // earth
-  6: 0.90,   // neptune
-  7: 1.00,   // uranus
-  8: 2.00,   // saturn
-  9: 1.45,   // jupiter
-  10: 2.10,  // sun
-  11: 3.00   // black_hole
+  0: 0.225,  // pluto
+  1: 0.315,  // moon
+  2: 0.405,  // mercury
+  3: 0.495,  // mars
+  4: 0.585,  // venus
+  5: 0.630,  // earth
+  6: 0.810,  // neptune
+  7: 0.900,  // uranus
+  8: 1.800,  // saturn
+  9: 1.305,  // jupiter
+  10: 1.890, // sun
+  11: 2.700  // black_hole
 };
-
 const planets_minYValue = {
-  0: 64 * 0.25,   // pluto   - radius ~16
-  1: 64 * 0.35,   // moon    - radius ~22
-  2: 64 * 0.45,   // mercury - radius ~29
-  3: 64 * 0.55,   // mars    - radius ~35
-  4: 64 * 0.65,   // venus   - radius ~42
-  5: 64 * 0.70,   // earth   - radius ~45
-  6: 64 * 0.90,   // neptune - radius ~58
-  7: 64 * 1.00,   // uranus  - radius ~64
-  8: 64 * 2.00,   // saturn  - radius ~128
-  9: 64 * 1.45,   // jupiter - radius ~93
-  10: 64 * 2.10,  // sun     - radius ~134
-  11: 64 * 3.00   // black_hole - radius ~192
+  0: 64 * 0.225,  // pluto      - radius ~14
+  1: 64 * 0.315,  // moon       - radius ~20
+  2: 64 * 0.405,  // mercury    - radius ~26
+  3: 64 * 0.495,  // mars       - radius ~32
+  4: 64 * 0.585,  // venus      - radius ~37
+  5: 64 * 0.630,  // earth      - radius ~40
+  6: 64 * 0.810,  // neptune    - radius ~52
+  7: 64 * 0.900,  // uranus     - radius ~58
+  8: 64 * 1.800,  // saturn     - radius ~115
+  9: 64 * 1.305,  // jupiter    - radius ~84
+  10: 64 * 1.890, // sun        - radius ~121
+  11: 64 * 2.700  // black_hole - radius ~173
 };
 
 let largestPlanet = 1;
