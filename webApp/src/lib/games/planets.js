@@ -88,6 +88,12 @@ class MainScene extends Phaser.Scene {
       sprite.setExistingBody(compoundBody);
       sprite.setPosition(x, y);
     }
+    else if (planet == 10){
+      sprite = this.matter.add
+        .sprite(x, y, 'planets', planet)
+        .setCircle(60)
+        .setScale(planets_scale[planet] * sf, planets_scale[planet] * sf);
+    }
     else if (planet == 11) {
       sprite = this.matter.add
         .sprite(x, y, 'planets', planet)
@@ -96,9 +102,9 @@ class MainScene extends Phaser.Scene {
       const Bodies = Phaser.Physics.Matter.Matter.Bodies;
       const Body = Phaser.Physics.Matter.Matter.Body;
 
-      const innerCircle = Bodies.circle(0, 0, 128 * sf,   { label: 'blackhole-body' });
-      const leftRing    = Bodies.circle(-160 * sf, 0, 30 * sf, { label: 'blackhole-ring' });
-      const rightRing   = Bodies.circle( 160 * sf, 0, 30 * sf, { label: 'blackhole-ring' });
+      const innerCircle = Bodies.circle(0, 0, 116 * sf,   { label: 'blackhole-body' });
+      const leftRing    = Bodies.circle(-140 * sf, 0, 25 * sf, { label: 'blackhole-ring' });
+      const rightRing   = Bodies.circle( 140 * sf, 0, 25 * sf, { label: 'blackhole-ring' });
 
       const compoundBody = Body.create({ parts: [innerCircle, leftRing, rightRing] });
       sprite.setExistingBody(compoundBody);
@@ -144,6 +150,12 @@ class MainScene extends Phaser.Scene {
       sprite.setExistingBody(compoundBody);
       sprite.setPosition(x, y);
     }
+    else if (planetQueue[0] == 10) {
+      sprite = this.matter.add
+        .sprite(x, y, 'planets', planetQueue[0])
+        .setCircle(60)
+        .setScale(planets_scale[planetQueue[0]] * sf, planets_scale[planetQueue[0]] * sf);
+    }
     else if (planetQueue[0] == 11) {
       sprite = this.matter.add
         .sprite(x, y, 'planets', planetQueue[0])
@@ -152,9 +164,9 @@ class MainScene extends Phaser.Scene {
       const Bodies = Phaser.Physics.Matter.Matter.Bodies;
       const Body = Phaser.Physics.Matter.Matter.Body;
 
-      const innerCircle = Bodies.circle(0, 0, 128 * sf,   { label: 'blackhole-body' });
-      const leftRing    = Bodies.circle(-160 * sf, 0, 30 * sf, { label: 'blackhole-ring' });
-      const rightRing   = Bodies.circle( 160 * sf, 0, 30 * sf, { label: 'blackhole-ring' });
+      const innerCircle = Bodies.circle(0, 0, 116 * sf,   { label: 'blackhole-body' });
+      const leftRing    = Bodies.circle(-140 * sf, 0, 25 * sf, { label: 'blackhole-ring' });
+      const rightRing   = Bodies.circle( 140 * sf, 0, 25 * sf, { label: 'blackhole-ring' });
 
       const compoundBody = Body.create({ parts: [innerCircle, leftRing, rightRing] });
       sprite.setExistingBody(compoundBody);
