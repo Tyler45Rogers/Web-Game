@@ -25,7 +25,7 @@
 </nav>
 
 <!-- Smaller Screens -->
-<nav class="block md:hidden w-full bg-base-300 opacity-95 sticky top-0 z-1000--hos">
+<nav class="block md:hidden w-full bg-base-300 opacity-95 sticky top-0 z-1000">
   <div class="flex flex-row justify-between items-center px-4 py-3">
     <!-- Left: Home Icon -->
     <a href="/" class="btn btn-ghost p-2">
