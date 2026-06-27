@@ -17,18 +17,19 @@
     onkeydown={handleKeydown}
     aria-label={title}
 >
-    <div class="bg-secondary [[data-theme=dark]_&]:bg-zinc-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-
-        <div class="flex items-center justify-between p-6 border-b border-gray-200">
+    <div class="bg-secondary [[data-theme=dark]_&]:bg-zinc-800 rounded-xl shadow-xl w-full max-w-2xl h-2/3 flex flex-col overflow-hidden">
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 shrink-0">
             <h2 class="text-2xl font-bold">{title}</h2>
             <button onclick={onclose} class="text-3xl leading-none" aria-label="Close modal">
                 &times;
             </button>
         </div>
         {#if screenshot}
-            <img src={screenshot} alt="{title} screenshot" class="w-full object-cover" />
+            <div class="flex items-center justify-center bg-black/10 h-64 shrink-0">
+                <img src={screenshot} alt="{title} screenshot" class="max-h-full max-w-full object-contain" />
+            </div>
         {/if}
-        <div class="p-6">
+        <div class="p-6 overflow-y-auto">
             <p class="leading-relaxed">{details}</p>
         </div>
     </div>

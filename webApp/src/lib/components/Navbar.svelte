@@ -25,7 +25,7 @@
 </nav>
 
 <!-- Smaller Screens -->
-<nav class="block md:hidden w-full bg-base-300 opacity-95 sticky top-0 z-1000">
+<nav class="md:hidden w-full bg-base-300 opacity-95 sticky top-0 z-1000">
   <div class="flex flex-row justify-between items-center px-4 py-3">
     <!-- Left: Home Icon -->
     <a href="/" class="btn btn-ghost p-2">
@@ -43,7 +43,7 @@
 
   <!-- Dropdown: opens from right -->
   {#if open}
-    <div class="absolute right-0 top-full mt-1 w-48 bg-base-100 border border-gray-300 rounded-lg shadow-lg z-50 flex flex-col p-2 gap-2">
+    <div class="absolute right-0 top-full mt-1 w-48 bg-base-100 border border-base-300 rounded-lg shadow-lg z-50 flex flex-col p-2 gap-2">
         <a href="/" class="btn btn-ghost p-2">
             <House size={28} />
             Home
