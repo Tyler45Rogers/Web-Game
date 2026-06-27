@@ -6,7 +6,7 @@
 </script>
 
 <!-- Larger Screens -->
-<nav class="hidden md:block w-full border-b-2 border-gray-300">
+<nav class="hidden md:block w-full bg-base-300 opacity-95 sticky top-0 z-1000">
   <div class="flex flex-row justify-between items-center px-10 py-4">
     <!-- Left: Home Icon -->
     <a href="/" class="btn btn-ghost p-2">
@@ -25,7 +25,7 @@
 </nav>
 
 <!-- Smaller Screens -->
-<nav class="block md:hidden w-full border-b-2 border-gray-300 relative">
+<nav class="block md:hidden w-full bg-base-300 opacity-95 sticky top-0 z-1000--hos">
   <div class="flex flex-row justify-between items-center px-4 py-3">
     <!-- Left: Home Icon -->
     <a href="/" class="btn btn-ghost p-2">
